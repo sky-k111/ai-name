@@ -7,6 +7,7 @@ from app.database import get_db
 from app.middleware.auth import get_current_user
 from app.models.user import User
 from app.models.naming_history import NamingHistory
+from app.models.favorite import Favorite
 from app.services import auth_service
 from app.services.email_service import send_verification, verify_code
 
@@ -18,6 +19,7 @@ router = APIRouter(prefix="/api/user", tags=["user"])
 
 class UpdateProfileRequest(BaseModel):
     nickname: str | None = Field(None, max_length=50)
+    username: str | None = Field(None, min_length=2, max_length=50)
 
 
 class ChangePasswordRequest(BaseModel):
@@ -47,11 +49,16 @@ async def update_profile(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """修改昵称."""
+    """修改昵称或用户名."""
     if request.nickname is not None:
         user.nickname = request.nickname.strip() or None
+    if request.username is not None:
+        existing = db.query(User).filter(User.username == request.username, User.id != user.id).first()
+        if existing:
+            raise HTTPException(status_code=409, detail="用户名已被使用")
+        user.username = request.username.strip()
     db.commit()
-    return {"message": "已更新", "nickname": user.nickname}
+    return {"message": "已更新", "nickname": user.nickname, "username": user.username}
 
 
 @router.put("/password", summary="修改密码")
@@ -124,6 +131,46 @@ async def delete_account(
     db.delete(user)
     db.commit()
     return {"message": "账号已注销"}
+
+
+@router.get("/stats", summary="个人取名统计")
+async def get_stats(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """获取个人取名统计数据."""
+    total = db.query(NamingHistory).filter(NamingHistory.user_id == user.id, NamingHistory.is_deleted == False).count()
+    by_type = {}
+    for t in ["naming", "analyze", "compare", "premium"]:
+        cnt = db.query(NamingHistory).filter(
+            NamingHistory.user_id == user.id,
+            NamingHistory.is_deleted == False,
+            NamingHistory.record_type == t
+        ).count()
+        if cnt > 0: by_type[t] = cnt
+    favorites = db.query(Favorite).filter(Favorite.user_id == user.id).count()
+    return {"total_namings": total, "by_type": by_type, "favorites": favorites}
+
+
+@router.get("/export", summary="导出个人数据")
+async def export_data(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """导出个人全部数据为 JSON."""
+    import json as j
+    history = (
+        db.query(NamingHistory)
+        .filter(NamingHistory.user_id == user.id, NamingHistory.is_deleted == False)
+        .order_by(NamingHistory.created_at.desc()).all()
+    )
+    favs = db.query(Favorite).filter(Favorite.user_id == user.id).all()
+    data = {
+        "user": {"username": user.username, "email": user.email, "role": user.role},
+        "history": [{"id": h.id, "surname": h.surname, "gender": h.gender, "type": h.record_type, "result": j.loads(h.result_json) if h.result_json else [], "created_at": h.created_at.isoformat() if h.created_at else ""} for h in history],
+        "favorites": [{"full_name": f.full_name, "data": j.loads(f.name_data) if f.name_data else {}} for f in favs],
+    }
+    return data
 
 
 @router.get("/profile", summary="获取个人资料")

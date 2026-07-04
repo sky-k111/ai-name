@@ -64,9 +64,11 @@ export async function refineNames(data: RefineRequest): Promise<RefineResponse> 
   return res.data
 }
 
-/** 取名历史列表（支持分页） */
-export async function getHistory(skip: number = 0, limit: number = 20): Promise<HistoryListResponse> {
-  const res = await http.get('/naming/history', { params: { skip, limit } })
+/** 取名历史列表（支持分页和类型筛选） */
+export async function getHistory(skip: number = 0, limit: number = 20, recordType?: string): Promise<HistoryListResponse> {
+  const params: any = { skip, limit }
+  if (recordType) params.record_type = recordType
+  const res = await http.get('/naming/history', { params })
   return res.data
 }
 
@@ -162,6 +164,18 @@ export async function removeFavorite(id: number): Promise<void> {
   await http.delete(`/favorites/${id}`)
 }
 
+/** 个人取名统计 */
+export async function getStats(): Promise<any> {
+  const res = await http.get('/user/stats')
+  return res.data
+}
+
+/** 导出个人数据 */
+export async function exportData(): Promise<any> {
+  const res = await http.get('/user/export')
+  return res.data
+}
+
 /** 批量删除取名历史 */
 export async function batchDeleteHistory(ids: number[]): Promise<{ deleted_count: number }> {
   const res = await http.post('/naming/history/batch-delete', { ids })
@@ -183,6 +197,11 @@ export async function getProfile(): Promise<any> {
 /** 修改昵称 */
 export async function updateProfile(nickname: string): Promise<void> {
   await http.put('/user/profile', { nickname })
+}
+
+/** 修改用户名 */
+export async function updateUsername(username: string): Promise<void> {
+  await http.put('/user/profile', { username })
 }
 
 /** 修改密码 */

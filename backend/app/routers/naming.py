@@ -170,11 +170,15 @@ async def history_list(
     db: Session = Depends(get_db),
     skip: int = 0,
     limit: int = 20,
+    record_type: str | None = None,
 ):
-    """获取当前用户的取名历史（不含已删除），按时间倒序."""
+    """获取当前用户的取名历史（不含已删除），支持类型筛选，按时间倒序."""
+    filters = [NamingHistory.user_id == user.id, NamingHistory.is_deleted == False]
+    if record_type:
+        filters.append(NamingHistory.record_type == record_type)
     query = (
         db.query(NamingHistory)
-        .filter(NamingHistory.user_id == user.id, NamingHistory.is_deleted == False)
+        .filter(*filters)
         .order_by(NamingHistory.created_at.desc())
     )
     total = query.count()

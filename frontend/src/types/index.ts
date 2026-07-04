@@ -21,7 +21,6 @@ export interface NameItem {
   sound_analysis?: string
   char_analysis?: string
   popularity?: string
-  story?: string
   score?: number
   sound_score?: number
   meaning_score?: number

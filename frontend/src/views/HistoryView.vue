@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-[#f5f5f7]">
     <div class="max-w-[800px] mx-auto px-6 py-16">
       <!-- 顶部 -->
-      <div class="flex items-center justify-between mb-8">
+      <div class="flex items-start justify-between mb-8">
         <div>
           <h1 class="text-[36px] font-semibold text-[#1d1d1f] tracking-tight">
             取名历史
@@ -10,35 +10,19 @@
           <p class="mt-2 text-[15px] text-[#86868b]">
             共 {{ total }} 条记录
           </p>
+          <select v-model="filter" class="mt-2 text-[14px] bg-[#f5f5f7] rounded-lg px-3 py-1.5 outline-none border border-[#d2d2d7]/30" @change="loadData">
+            <option value="">全部类型</option>
+            <option value="naming">仅取名</option>
+            <option value="analyze">仅分析</option>
+            <option value="compare">仅对比</option>
+            <option value="premium">仅精品</option>
+          </select>
         </div>
         <div class="flex items-center gap-3">
-          <button
-            v-if="items.length > 0"
-            class="text-[14px] text-[#ff3b30] hover:underline transition-colors"
-            @click="handleClearAll"
-          >
-            一键清空
-          </button>
-          <button
-            v-if="items.length > 0"
-            class="text-[14px] text-[#86868b] hover:text-[#1d1d1f] transition-colors"
-            @click="toggleBatchMode"
-          >
-            {{ batchMode ? '完成' : '选择' }}
-          </button>
-          <button
-            v-if="batchMode && selectedIds.length > 0"
-            class="text-[14px] text-[#ff3b30] hover:underline transition-colors"
-            @click="handleBatchDelete"
-          >
-            删除选中 ({{ selectedIds.length }})
-          </button>
-          <button
-            class="text-[15px] text-[#0071e3] hover:underline transition-colors"
-            @click="$router.push('/')"
-          >
-            ← 返回主页
-          </button>
+          <button v-if="items.length > 0" class="text-[14px] text-[#ff3b30] hover:underline whitespace-nowrap" @click="handleClearAll">一键清空</button>
+          <button v-if="items.length > 0" class="text-[14px] text-[#86868b] hover:text-[#1d1d1f] whitespace-nowrap" @click="toggleBatchMode">{{ batchMode ? '完成' : '选择' }}</button>
+          <button v-if="batchMode && selectedIds.length>0" class="text-[14px] text-[#ff3b30] hover:underline whitespace-nowrap" @click="handleBatchDelete">删除选中({{ selectedIds.length }})</button>
+          <button class="text-[15px] text-[#0071e3] hover:underline whitespace-nowrap" @click="$router.push('/')">← 返回主页</button>
         </div>
       </div>
 
@@ -156,6 +140,7 @@ const expandedId = ref<number | null>(null)
 const error = ref('')
 const batchMode = ref(false)
 const selectedIds = ref<number[]>([])
+const filter = ref('')
 
 function formatTime(iso: string): string {
   if (!iso) return ''
@@ -224,7 +209,7 @@ async function loadData() {
   loading.value = true
   error.value = ''
   try {
-    const res = await getHistory()
+    const res = await getHistory(0, 50, filter.value || undefined)
     items.value = res.items
     total.value = res.total
   } catch (e: any) {

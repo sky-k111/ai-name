@@ -41,18 +41,10 @@
 
         <!-- 用户名 -->
         <div class="flex items-center justify-between">
-          <div><p class="text-[13px] text-[#86868b]">用户名</p><p class="text-[17px] text-[#1d1d1f]">{{ profile.username }}</p></div>
-        </div>
-
-        <!-- 昵称 -->
-        <div class="flex items-center justify-between">
-          <div class="flex-1"><p class="text-[13px] text-[#86868b]">昵称</p>
-            <input v-if="editingNickname" v-model="nicknameForm" maxlength="50" class="text-[17px] text-[#1d1d1f] bg-transparent outline-none border-b border-[#0071e3]" @keydown.enter="saveNickname" />
-            <p v-else class="text-[17px] text-[#1d1d1f]">{{ profile.nickname || '未设置' }}</p>
+          <div><p class="text-[13px] text-[#86868b]">用户名</p>
+            <p class="text-[17px] text-[#1d1d1f]">{{ profile.username }}</p>
           </div>
-          <button class="text-[14px] text-[#0071e3] hover:underline" @click="editingNickname ? saveNickname() : (editingNickname = true, nicknameForm = profile.nickname || '')">
-            {{ editingNickname ? '保存' : '编辑' }}
-          </button>
+          <button class="text-[14px] text-[#0071e3] hover:underline" @click="showChangeUsername=true; newUsername=profile.username">修改</button>
         </div>
 
         <!-- 邮箱 -->
@@ -69,6 +61,29 @@
         <!-- 注册时间 -->
         <div class="flex items-center justify-between">
           <div><p class="text-[13px] text-[#86868b]">注册时间</p><p class="text-[17px] text-[#1d1d1f]">{{ formatTime(profile.created_at) }}</p></div>
+        </div>
+
+        <div class="h-px bg-[#d2d2d7]/30" />
+
+        <!-- 统计 -->
+        <div>
+          <p class="text-[13px] font-medium text-[#86868b] mb-3 tracking-wide">取名统计</p>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-[#f5f5f7] rounded-xl p-3"><p class="text-[22px] font-semibold text-[#1d1d1f]">{{ stats.total }}</p><p class="text-[12px] text-[#86868b]">总记录</p></div>
+            <div class="bg-[#f5f5f7] rounded-xl p-3"><p class="text-[22px] font-semibold text-[#1d1d1f]">{{ stats.favorites }}</p><p class="text-[12px] text-[#86868b]">收藏数</p></div>
+          </div>
+        </div>
+
+        <!-- 修改用户名弹窗 -->
+        <div v-if="showChangeUsername" class="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center" @click.self="showChangeUsername=false">
+          <div class="bg-white rounded-2xl p-6 w-full max-w-[360px] mx-4 shadow-xl">
+            <h3 class="text-[18px] font-semibold text-[#1d1d1f] mb-4">修改用户名</h3>
+            <input v-model="newUsername" maxlength="50" placeholder="新用户名（2-50字）" class="w-full px-4 py-3 bg-[#f5f5f7] rounded-xl text-[17px] outline-none mb-3 border border-transparent focus:border-[#0071e3]" @keydown.enter="handleChangeUsername"/>
+            <div class="flex gap-3">
+              <button class="flex-1 py-2.5 bg-[#0071e3] text-white rounded-full font-medium disabled:opacity-50" :disabled="newUsername.length<2" @click="handleChangeUsername">确认</button>
+              <button class="flex-1 py-2.5 bg-[#f5f5f7] rounded-full font-medium" @click="showChangeUsername=false">取消</button>
+            </div>
+          </div>
         </div>
 
         <div class="h-px bg-[#d2d2d7]/30" />
@@ -115,7 +130,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { getProfile, updateProfile, changePassword, bindEmail, verifyEmail, uploadAvatar, deleteAccount } from '../api'
+import { getProfile, updateProfile, updateUsername, changePassword, bindEmail, verifyEmail, uploadAvatar, deleteAccount, getStats } from '../api'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -143,8 +158,6 @@ function showSuccess(msg: string) {
   clearTimeout(msgTimer)
   msgTimer = setTimeout(() => { successMsg.value = '' }, 5000)
 }
-const editingNickname = ref(false)
-const nicknameForm = ref('')
 const emailForm = ref('')
 const codeForm = ref('')
 const codeSent = ref(false)
@@ -152,6 +165,9 @@ const sendingCode = ref(false)
 const countdown = ref(0)
 
 const pwForm = reactive({ old: '', new1: '' })
+const stats = reactive({ total: 0, favorites: 0 })
+const showChangeUsername = ref(false)
+const newUsername = ref('')
 
 function clearMessages() { error.value = ''; successMsg.value = '' }
 function formatTime(s: string) { return s?.replace('T', ' ').slice(0, 19) || '' }
@@ -159,6 +175,20 @@ function formatTime(s: string) { return s?.replace('T', ' ').slice(0, 19) || '' 
 async function loadProfile() {
   try {
     Object.assign(profile, await getProfile())
+    const s = await getStats()
+    Object.assign(stats, s)
+  } catch (e: any) { showError(e.message) }
+}
+
+async function handleChangeUsername() {
+  if (newUsername.value.length < 2) return
+  try {
+    await updateProfile(newUsername.value.trim())
+    await updateUsername(newUsername.value.trim())
+    profile.username = newUsername.value.trim()
+    authStore.username = newUsername.value.trim()
+    showChangeUsername.value = false
+    showSuccess('用户名已更新')
   } catch (e: any) { showError(e.message) }
 }
 
@@ -171,14 +201,6 @@ async function handleDeleteAccount() {
   } catch (e: any) { showError(e.message) }
 }
 
-async function saveNickname() {
-  try {
-    await updateProfile(nicknameForm.value.trim())
-    profile.nickname = nicknameForm.value.trim() || null
-    editingNickname.value = false
-    showSuccess('昵称已更新')
-  } catch (e: any) { showError(e.message) }
-}
 
 async function handleChangePassword() {
   try {

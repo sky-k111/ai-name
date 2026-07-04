@@ -47,17 +47,32 @@
           <label class="block text-[13px] font-medium text-[#86868b] mb-2 tracking-wide">
             密码
           </label>
-          <input
-            v-model="form.password"
-            type="password"
-            maxlength="100"
-            placeholder="请输入密码（至少6位）"
-            class="w-full px-4 py-3 bg-[#f5f5f7] rounded-xl text-[17px] text-[#1d1d1f]
-                   placeholder-[#aeaeb2] outline-none border border-transparent
-                   focus:border-[#0071e3] transition-colors"
-            :disabled="loading"
-            @keydown.enter="handleSubmit"
-          />
+          <div class="relative">
+            <input
+              v-model="form.password"
+              :type="showPw ? 'text' : 'password'"
+              maxlength="100"
+              :placeholder="isRegister ? '请输入密码（至少6位）' : '请输入密码'"
+              class="w-full px-4 py-3 pr-10 bg-[#f5f5f7] rounded-xl text-[17px] text-[#1d1d1f]
+                     placeholder-[#aeaeb2] outline-none border border-transparent
+                     focus:border-[#0071e3] transition-colors"
+              :disabled="loading"
+              @keydown.enter="handleSubmit"
+            />
+            <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#aeaeb2] hover:text-[#1d1d1f] transition-colors" @click="showPw = !showPw">
+              <svg v-if="showPw" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              <svg v-else class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            </button>
+          </div>
+          <!-- 密码强度 -->
+          <div v-if="isRegister && form.password" class="mt-2">
+            <div class="flex gap-1">
+              <div class="h-1 flex-1 rounded-full transition-colors" :class="strength >= 1 ? (strength===1?'bg-red-400':strength===2?'bg-yellow-400':'bg-green-400') : 'bg-[#e8e8ed]'"/>
+              <div class="h-1 flex-1 rounded-full transition-colors" :class="strength >= 2 ? (strength===2?'bg-yellow-400':'bg-green-400') : 'bg-[#e8e8ed]'"/>
+              <div class="h-1 flex-1 rounded-full transition-colors" :class="strength >= 3 ? 'bg-green-400' : 'bg-[#e8e8ed]'"/>
+            </div>
+            <p class="text-[12px] mt-1" :class="strength===1?'text-red-400':strength===2?'text-yellow-500':'text-green-500'">{{ strengthLabel }}</p>
+          </div>
         </div>
 
         <!-- 按钮 -->
@@ -135,6 +150,7 @@ const authStore = useAuthStore()
 const isRegister = ref(false)
 const loading = ref(false)
 const error = ref('')
+const showPw = ref(false)
 let errorTimer: any = null
 
 function showError(msg: string) {
@@ -173,11 +189,26 @@ const form = reactive({
 
 const canSubmit = computed(() => {
   const hasUsername = form.username.trim().length >= 2
-  // 注册需要密码至少6位，登录只需要非空
   const hasPassword = isRegister.value
     ? form.password.length >= 6
     : form.password.length >= 1
   return hasUsername && hasPassword
+})
+
+const strength = computed(() => {
+  const p = form.password
+  if (p.length < 6) return 0
+  const hasLetter = /[a-zA-Z]/.test(p)
+  const hasDigit = /\d/.test(p)
+  const hasSpecial = /[^a-zA-Z0-9]/.test(p)
+  if (hasLetter && hasDigit && hasSpecial) return 3  // 强
+  if (hasLetter && hasDigit) return 2                 // 中
+  return 1                                              // 弱
+})
+
+const strengthLabel = computed(() => {
+  const labels = ['', '弱', '中', '强']
+  return labels[strength.value] || ''
 })
 
 function toggleMode() {

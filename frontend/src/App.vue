@@ -3,6 +3,7 @@
 </template>
 
 <script setup lang="ts">
-// 难度1：仅 HomeView
-// 难度2：加 LoginView + HistoryView + 路由守卫
+import { useThemeStore } from './stores/theme'
+// 全局初始化主题，确保所有页面刷新后深色模式不丢失
+useThemeStore()
 </script>

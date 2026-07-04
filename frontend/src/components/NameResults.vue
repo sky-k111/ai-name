@@ -76,7 +76,10 @@
           <h3 class="text-[28px] font-semibold text-[#1d1d1f] tracking-tight">
             {{ name.full_name }}
           </h3>
-          <button class="text-[14px] text-[#aeaeb2] hover:text-[#0071e3] transition-colors" title="收藏" @click.stop="emit('favorite', name)">收藏</button>
+          <div class="flex gap-3">
+            <button class="text-[13px] text-[#86868b] hover:text-[#0071e3] transition-colors" @click.stop="speak(name.full_name)">试读</button>
+            <button class="text-[14px] text-[#aeaeb2] hover:text-[#0071e3] transition-colors" @click.stop="emit('favorite', name)">收藏</button>
+          </div>
         </div>
 
         <!-- 寓意 -->
@@ -113,6 +116,12 @@ const emit = defineEmits<{
   retry: []
   favorite: [name: NameItem]
 }>()
+
+function speak(text: string) {
+  const u = new SpeechSynthesisUtterance(text)
+  u.lang = 'zh-CN'; u.rate = 0.8
+  speechSynthesis.speak(u)
+}
 </script>
 
 <style scoped>

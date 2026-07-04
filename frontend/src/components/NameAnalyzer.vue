@@ -8,7 +8,7 @@
           v-model="name"
           type="text"
           maxlength="10"
-          placeholder="输入一个名字，如：李世民"
+          placeholder="请输入一个名字"
           class="flex-1 bg-transparent text-[20px] text-[#1d1d1f] placeholder-[#aeaeb2]
                  outline-none"
           :disabled="loading"

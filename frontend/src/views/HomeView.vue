@@ -4,6 +4,10 @@
     <nav class="flex items-center justify-end max-w-[800px] mx-auto px-6 py-4">
       <template v-if="authStore.isLoggedIn">
         <span class="text-[14px] text-[#86868b] mr-4">{{ authStore.username }}</span>
+        <button class="text-[16px] text-[#86868b] hover:text-[#1d1d1f] transition-colors mr-3" @click="theme.toggle()" :title="theme.dark?'切换浅色':'切换深色'">
+          <svg v-if="theme.dark" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><path stroke-linecap="round" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        </button>
         <button class="text-[14px] text-[#86868b] hover:text-[#1d1d1f] transition-colors mr-3" @click="$router.push('/balance')">钱包</button>
         <button class="text-[14px] text-[#86868b] hover:text-[#1d1d1f] transition-colors mr-3" @click="$router.push('/favorites')">收藏</button>
         <button class="text-[14px] text-[#86868b] hover:text-[#1d1d1f] transition-colors mr-4" @click="$router.push('/profile')">个人中心</button>
@@ -37,7 +41,7 @@
       </template>
     </nav>
 
-    <div class="max-w-[800px] mx-auto px-6 pb-16">
+    <div class="max-w-[800px] mx-auto px-6 pb-16 min-h-[600px]">
       <!-- 标题 -->
       <header class="text-center mb-10">
         <h1 class="text-[36px] md:text-[44px] font-semibold text-[#1d1d1f]
@@ -65,7 +69,6 @@
       <!-- 精品取名 -->
       <section v-show="mode === 'premium'" class="mb-10"><PremiumNaming /></section>
 
-      <!-- 取名模式 -->
       <div v-show="mode === 'name'">
 
       <!-- 表单 -->
@@ -126,6 +129,7 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { useThemeStore } from '../stores/theme'
 import type { GenerateRequest, NameItem, ChatMessage, LoadState } from '../types'
 import { generateNames, refineNames, addFavorite } from '../api'
 import NameForm from '../components/NameForm.vue'
@@ -137,6 +141,7 @@ import PremiumNaming from '../components/PremiumNaming.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const theme = useThemeStore()
 const mode = ref('name')
 const modes = [
   { key: 'name', label: '取名', fee: '免费' },
