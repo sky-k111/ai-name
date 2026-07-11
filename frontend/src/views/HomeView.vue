@@ -5,7 +5,7 @@
       <div class="flex items-center gap-5 text-sm text-[#77736a]">
         <button @click="settingsOpen = true"><span class="mr-2 inline-block h-2 w-2 rounded-full" :class="hasUserKey ? 'bg-[#32695d]' : 'bg-[#b7a178]'"/>模型设置</button>
         <template v-if="authStore.isLoggedIn">
-          <button @click="router.push('/history')">历史</button><button @click="router.push('/favorites')">收藏</button><button @click="router.push('/profile')">{{ authStore.username }}</button><button class="text-[#b65345]" @click="handleLogout">退出</button>
+          <button @click="historyOpen=true">历史</button><button @click="favoritesOpen=true">收藏</button><button @click="profileOpen=true">{{ authStore.username }}</button><button class="text-[#b65345]" @click="handleLogout">退出</button>
         </template>
         <button v-else class="rounded-full border border-[#32695d]/35 px-4 py-2 text-[#32695d]" @click="authOpen = true">登录</button>
       </div>
@@ -42,6 +42,9 @@
 
     <AuthDrawer :open="authOpen" @close="authOpen = false" @success="afterLogin" @guest="useGuestTrial" />
     <ModelSettingsDrawer :open="settingsOpen" @close="settingsOpen = false" @saved="refreshKeyState" />
+    <HistoryDrawer v-if="historyOpen" :open="true" @close="historyOpen=false" />
+    <FavoritesDrawer v-if="favoritesOpen" :open="true" @close="favoritesOpen=false" />
+    <ProfileDrawer v-if="profileOpen" :open="true" @close="profileOpen=false" />
     <Transition name="toast"><div v-if="toast" class="fixed left-1/2 top-6 z-[100] -translate-x-1/2 rounded-full px-5 py-3 text-sm text-white shadow-xl" :class="toast.type === 'error' ? 'bg-[#b65345]' : 'bg-[#32695d]'">{{ toast.message }}</div></Transition>
   </div>
 </template>
@@ -56,13 +59,14 @@ import { DEEPSEEK_KEY_SESSION, addFavorite, generateNames, guestGenerateNames, r
 import NameForm from '../components/NameForm.vue'; import NameResults from '../components/NameResults.vue'; import RefineChat from '../components/RefineChat.vue'
 import NameAnalyzer from '../components/NameAnalyzer.vue'; import CompareNames from '../components/CompareNames.vue'; import PremiumNaming from '../components/PremiumNaming.vue'
 import AuthDrawer from '../components/AuthDrawer.vue'; import ModelSettingsDrawer from '../components/ModelSettingsDrawer.vue'
+import HistoryDrawer from '../components/HistoryDrawer.vue'; import FavoritesDrawer from '../components/FavoritesDrawer.vue'; import ProfileDrawer from '../components/ProfileDrawer.vue'
 
 const router = useRouter(); const authStore = useAuthStore(); const hero = ref<HTMLElement>(); const workbench = ref<HTMLElement>(); const modeLayer=ref<HTMLElement>(); const modePanel=ref<HTMLElement>(); const modeMenuOpen=ref(false)
 const mode = ref('name'); const modes = [{key:'name',index:'01',label:'智能取名',fee:'基础',title:'写下关于名字的期待'},{key:'analyze',index:'02',label:'名字分析',fee:'¥1',title:'读懂一个名字'},{key:'compare',index:'03',label:'名字对比',fee:'¥1',title:'把候选名字放在一起'},{key:'premium',index:'04',label:'精品取名',fee:'¥2',title:'更完整的命名推演'}]
 const activeMode = computed(() => modes.find(m => m.key === mode.value) || modes[0])
 const formData = ref<GenerateRequest>({ surname:'', gender:'male', birthday:'', birth_time:'', style:'', expectations:'' })
 const names=ref<NameItem[]>([]); const resultState=ref<LoadState>('idle'); const errorMessage=ref(''); const conversationId=ref(''); const chatHistory=ref<ChatMessage[]>([])
-const isGenerating=ref(false); const isRefining=ref(false); const authOpen=ref(false); const settingsOpen=ref(false); const pendingGenerate=ref<GenerateRequest|null>(null); const hasUserKey=ref(!!sessionStorage.getItem(DEEPSEEK_KEY_SESSION)); const toast=ref<{type:'info'|'error';message:string}|null>(null)
+const isGenerating=ref(false); const isRefining=ref(false); const authOpen=ref(false); const settingsOpen=ref(false); const historyOpen=ref(false); const favoritesOpen=ref(false); const profileOpen=ref(false); const pendingGenerate=ref<GenerateRequest|null>(null); const hasUserKey=ref(!!sessionStorage.getItem(DEEPSEEK_KEY_SESSION)); const toast=ref<{type:'info'|'error';message:string}|null>(null)
 const showResults=computed(()=>resultState.value!=='idle'); const showRefine=computed(()=>resultState.value==='success')
 
 onMounted(() => { if (!matchMedia('(prefers-reduced-motion: reduce)').matches) gsap.timeline().from('.hero-line',{y:24,opacity:0,duration:.7,stagger:.1,ease:'power3.out'}).from(workbench.value!,{y:28,opacity:0,duration:.65,ease:'power3.out'},'-=.35') })
