@@ -8,6 +8,7 @@ from app.middleware.auth import get_current_user
 from app.models.user import User
 from app.models.transaction import Transaction
 from app.services import payment_service
+from app.config import ENABLE_DEMO_RECHARGE
 
 router = APIRouter(prefix="/api/payment", tags=["payment"])
 
@@ -36,6 +37,8 @@ async def recharge(
     db: Session = Depends(get_db),
 ):
     """模拟充值."""
+    if not ENABLE_DEMO_RECHARGE:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="充值功能未在当前环境启用")
     if request.amount <= 0:
         raise HTTPException(status_code=400, detail="充值金额必须大于0")
     new_balance = payment_service.recharge(db, user, request.amount)

@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import ADMIN_USERNAME, ADMIN_PASSWORD, SECRET_KEY
+from app.config import ADMIN_USERNAME, ADMIN_PASSWORD, SECRET_KEY, IS_PRODUCTION, validate_runtime_config
 from app.database import init_db, SessionLocal
 from app.routers import naming, auth, admin, user, payment, favorites
 from app.services.auth_service import init_admin
@@ -17,6 +17,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(na
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """启动时初始化数据库表 + 创建管理员."""
+    validate_runtime_config()
     init_db()
     db = SessionLocal()
     try:
@@ -54,7 +55,7 @@ app.include_router(favorites.router, tags=["favorites"])
 app.middleware("http")(rate_limit_middleware)
 
 # 启动时检查 JWT 密钥
-if SECRET_KEY == "dev-secret-key-change-in-production":
+if not IS_PRODUCTION and SECRET_KEY == "dev-secret-key-change-in-production":
     logging.warning("⚠️ JWT SECRET_KEY 使用默认值！生产环境请设置环境变量 SECRET_KEY")
 
 

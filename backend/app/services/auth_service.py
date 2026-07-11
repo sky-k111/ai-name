@@ -29,11 +29,12 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 
-def create_access_token(user_id: int) -> str:
+def create_access_token(user_id: int, token_version: int = 0) -> str:
     """生成 JWT token."""
     expire = datetime.now(CST) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     payload = {
         "sub": str(user_id),  # JWT spec 要求 sub 为字符串
+        "ver": token_version,
         "exp": expire,
     }
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
@@ -62,7 +63,7 @@ def login_user(db: Session, username: str, password: str) -> str:
         raise ValueError("用户名或密码错误")
     if not verify_password(password, user.password_hash):
         raise ValueError("用户名或密码错误")
-    return create_access_token(user.id)
+    return create_access_token(user.id, user.token_version)
 
 
 def log_auth(db: Session, username: str, action: str, ip_address: str | None = None):
@@ -73,12 +74,11 @@ def log_auth(db: Session, username: str, action: str, ip_address: str | None = N
 
 
 def init_admin(db: Session, username: str, password: str):
-    """确保管理员账号存在。不存在则创建，每次启动同步密码和角色."""
+    """确保管理员账号存在；启动时不重置现有账号密码或角色."""
+    if not username or not password:
+        return
     existing = db.query(User).filter(User.username == username).first()
     if existing:
-        existing.role = "admin"
-        existing.password_hash = hash_password(password)
-        db.commit()
         return
     user = User(
         username=username,
@@ -87,3 +87,8 @@ def init_admin(db: Session, username: str, password: str):
     )
     db.add(user)
     db.commit()
+
+
+def invalidate_sessions(user: User) -> None:
+    """使该用户现有 JWT 立即失效。"""
+    user.token_version += 1

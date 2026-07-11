@@ -51,7 +51,7 @@ async def register(request: RegisterRequest, req: Request, db: Session = Depends
         user = auth_service.register_user(db, request.username, request.password)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
-    token = auth_service.create_access_token(user.id)
+    token = auth_service.create_access_token(user.id, user.token_version)
     # 记录日志
     auth_service.log_auth(db, user.username, "register", req.client.host if req.client else None)
     return {"token": token, "username": user.username, "role": user.role}
@@ -79,7 +79,7 @@ async def login(request: LoginRequest, req: Request, db: Session = Depends(get_d
     if not auth_service.verify_password(request.password, user.password_hash):
         record_login_fail(ip)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户名或密码错误")
-    token = auth_service.create_access_token(user.id)
+    token = auth_service.create_access_token(user.id, user.token_version)
     reset_login_fails(ip)
     auth_service.log_auth(db, user.username, "login", ip)
     return {"token": token, "username": user.username, "role": user.role}
@@ -118,6 +118,7 @@ async def reset_password(request: ResetPasswordRequest, db: Session = Depends(ge
     if not verify_code(db, request.email, request.code, "reset_password"):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="验证码错误或已过期")
     user.password_hash = auth_service.hash_password(request.new_password)
+    auth_service.invalidate_sessions(user)
     db.commit()
     return {"message": "密码已重置，请使用新密码登录"}
 

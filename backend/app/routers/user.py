@@ -71,6 +71,7 @@ async def change_password(
     if not auth_service.verify_password(request.old_password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="旧密码错误")
     user.password_hash = auth_service.hash_password(request.new_password)
+    auth_service.invalidate_sessions(user)
     db.commit()
     return {"message": "密码已修改"}
 

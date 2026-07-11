@@ -23,6 +23,7 @@ class User(Base):
     vip_expire_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     daily_free_used: Mapped[int] = mapped_column(default=0, nullable=False)
     daily_exp_used: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    token_version: Mapped[int] = mapped_column(Integer, default=0, server_default="0", nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=beijing_now, nullable=False
     )

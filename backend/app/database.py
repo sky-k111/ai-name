@@ -67,6 +67,7 @@ def _migrate():
             ("vip_expire_at", "DATETIME"),
             ("daily_free_used", "INTEGER DEFAULT 0"),
             ("daily_exp_used", "BOOLEAN DEFAULT 0"),
+            ("token_version", "INTEGER DEFAULT 0"),
         ]
 
         # naming_history 新增字段

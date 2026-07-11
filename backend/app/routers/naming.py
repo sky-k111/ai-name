@@ -23,7 +23,7 @@ _service = NamingService()
 class GenerateRequest(BaseModel):
     surname: str = Field(..., min_length=1, max_length=5, description="姓氏")
     gender: str = Field(..., pattern="^(male|female)$", description="性别")
-    birthday: str | None = Field(None, description="出生日期 YYYY-MM-DD")
+    birthday: str | None = Field(None, max_length=20, description="出生日期 YYYY-MM-DD")
     birth_time: str | None = Field(None, max_length=10, description="出生时辰")
     style: str | None = Field(None, max_length=50, description="期望风格")
     expectations: str | None = Field(None, max_length=200, description="其他期望")
@@ -43,13 +43,13 @@ class GenerateResponse(BaseModel):
 
 class ChatMessage(BaseModel):
     role: str = Field(..., pattern="^(user|assistant)$")
-    content: str
+    content: str = Field(..., min_length=1, max_length=1000)
 
 
 class RefineRequest(BaseModel):
     conversation_id: str | None = Field(None, description="会话 ID")
     original_request: GenerateRequest
-    history: list[ChatMessage] = Field(default_factory=list)
+    history: list[ChatMessage] = Field(default_factory=list, max_length=30)
     feedback: str = Field(..., min_length=1, max_length=500, description="反馈意见")
 
 
@@ -293,16 +293,18 @@ async def clear_all_history(
 
 class CompareRequest(BaseModel):
     names: list[str] = Field(..., min_length=2, max_length=5, description="要对比的名字列表")
+    # Pydantic v2 applies constraints to list cardinality, not each item.
+    # Validate item size explicitly before constructing the prompt.
     gender: str = Field(default="male", pattern="^(male|female)$")
 
 
 class PremiumRequest(BaseModel):
     surname: str = Field(..., min_length=1, max_length=5)
     gender: str = Field(..., pattern="^(male|female)$")
-    birthday: str | None = None
-    birth_time: str | None = None
-    style: str | None = None
-    expectations: str | None = None
+    birthday: str | None = Field(None, max_length=20)
+    birth_time: str | None = Field(None, max_length=10)
+    style: str | None = Field(None, max_length=50)
+    expectations: str | None = Field(None, max_length=200)
 
 
 @router.post("/compare", summary="名字对比（付费）")
@@ -312,6 +314,8 @@ async def compare_names(
     db: Session = Depends(get_db),
 ):
     """AI 横向对比多个名字，1元/次."""
+    if any(len(name) > 20 for name in request.names):
+        raise HTTPException(status_code=422, detail="每个名字不能超过20个字符")
     check = check_and_deduct(db, user, "compare")
     if not check["allowed"]:
         raise HTTPException(

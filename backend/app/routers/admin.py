@@ -123,6 +123,7 @@ async def admin_reset_password(
     if user.role == "admin" and user.id != admin.id:
         raise HTTPException(status_code=403, detail="不能重置其他管理员的密码")
     user.password_hash = auth_service.hash_password(request.new_password)
+    auth_service.invalidate_sessions(user)
     db.commit()
     return {"message": f"用户 {user.username} 的密码已重置"}
 

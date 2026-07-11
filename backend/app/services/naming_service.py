@@ -7,6 +7,7 @@ import uuid
 from app.utils.deepseek import DeepSeekClient, DeepSeekError
 
 logger = logging.getLogger(__name__)
+MAX_PROMPT_CHARS = 12_000
 
 # ── System Prompt ─────────────────────────────────────────────
 SYSTEM_PROMPT = """\
@@ -46,6 +47,12 @@ class NamingService:
     def __init__(self):
         self._client = DeepSeekClient()
 
+    @staticmethod
+    def _enforce_prompt_budget(prompt: str) -> str:
+        if len(prompt) > MAX_PROMPT_CHARS:
+            raise DeepSeekError("输入内容过长，请缩短后重试", status_code=413)
+        return prompt
+
     def _build_generate_prompt(self, request: dict) -> str:
         """拼装首次生成 prompt."""
         gender_text = "男" if request.get("gender") == "male" else "女"
@@ -63,7 +70,7 @@ class NamingService:
             parts.append(f"- 其他期望：{request['expectations']}")
 
         user_text = "请为以下信息生成名字：\n" + "\n".join(parts)
-        return user_text
+        return self._enforce_prompt_budget(user_text)
 
     def _build_refine_prompt(
         self,
@@ -89,7 +96,7 @@ class NamingService:
         parts.append(f"\n用户的新反馈：{feedback}")
         parts.append("\n请根据以上反馈重新生成名字，保持 JSON 格式。")
 
-        return "\n".join(parts)
+        return self._enforce_prompt_budget("\n".join(parts))
 
     def _clean_json(self, raw: str) -> str:
         """清理 LLM 常见 JSON 错误."""
@@ -191,6 +198,8 @@ class NamingService:
         """对比多个名字."""
         gender_text = "男" if gender == "male" else "女"
         names_text = "、".join(names)
+        if any(len(name) > 20 for name in names) or len(names_text) > MAX_PROMPT_CHARS:
+            raise DeepSeekError("输入内容过长，请缩短后重试", status_code=413)
         user_prompt = f"""请横向对比以下 {len(names)} 个名字：
 名字：{names_text}
 性别：{gender_text}
@@ -224,7 +233,7 @@ class NamingService:
   ]
 }"""
 
-        user_prompt = self._build_generate_prompt(request) + "\n请进行精品深度分析，每个名字提供完整八字、音律、字形、重名分析和命名故事。"
+        user_prompt = self._enforce_prompt_budget(self._build_generate_prompt(request) + "\n请进行精品深度分析，每个名字提供完整八字、音律、字形、重名分析和命名故事。")
         raw = await self._client.chat(sys_prompt, user_prompt)
         names = self._parse_response(raw)
         return {"names": names, "is_premium": True}

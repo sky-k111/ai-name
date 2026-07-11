@@ -14,9 +14,7 @@ COPY frontend/dist/ ./static/
 
 EXPOSE 8000
 
-ENV DEEPSEEK_API_KEY=""
-ENV SECRET_KEY=""
-ENV ADMIN_USERNAME="admin"
-ENV ADMIN_PASSWORD="admin123456"
+ENV ENVIRONMENT="production"
+# SECRET_KEY、ADMIN_USERNAME、ADMIN_PASSWORD、DEEPSEEK_API_KEY 必须由部署平台注入。
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
