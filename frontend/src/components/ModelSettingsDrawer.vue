@@ -8,15 +8,6 @@
           <div class="mt-14"><p class="drawer-item text-xs tracking-[.24em] text-[#32695d]">DEEPSEEK PROVIDER</p><h2 id="model-title" class="drawer-item mt-4 font-serif text-[42px] leading-tight">模型与密钥</h2><p class="drawer-item mt-4 text-sm leading-7 text-[#77736a]">选择使用项目提供的模型配置，或仅在当前浏览器会话中使用你的私人 Key。</p></div>
 
           <div class="drawer-item mt-9 rounded-[20px] border border-[#d9d1c3] bg-white/55 p-5">
-<<<<<<< HEAD
-            <div class="flex items-center justify-between"><div><p class="text-sm font-medium">项目模型通道</p><p class="mt-1 text-xs text-[#9a958b]">DeepSeek Chat</p></div><span class="flex items-center gap-2 rounded-full px-3 py-1.5 text-xs" :class="systemKey?'bg-[#e5eee9] text-[#32695d]':'bg-[#f3e7e3] text-[#b65345]'"><i class="h-1.5 w-1.5 rounded-full bg-current"/>{{ systemKey?'可用':'未配置' }}</span></div>
-          </div>
-
-          <div class="drawer-item mt-8">
-            <div class="flex items-end justify-between"><label class="text-xs tracking-[.12em] text-[#77736a]">你的 DEEPSEEK API KEY</label><span class="text-[11px] text-[#9a958b]">可选</span></div>
-            <div class="mt-3 flex items-center rounded-2xl border border-[#d9d1c3] bg-white/60 px-4 transition-colors focus-within:border-[#32695d]"><input ref="keyInput" v-model="key" :type="showKey?'text':'password'" autocomplete="off" spellcheck="false" placeholder="sk-..." class="min-w-0 flex-1 bg-transparent py-4 font-mono text-sm outline-none"/><button class="ml-3 text-xs text-[#77736a] hover:text-[#32695d]" @click="showKey=!showKey">{{ showKey?'隐藏':'显示' }}</button></div>
-            <div class="mt-3 flex items-center gap-2 text-xs text-[#9a958b]"><span class="h-1.5 w-1.5 rounded-full" :class="key.trim()?'bg-[#32695d]':'bg-[#c9c2b7]'"/>{{ key.trim()?'将优先使用你的会话 Key':'当前使用项目模型配置' }}</div>
-=======
             <div class="flex items-center justify-between"><div><p class="text-sm font-medium">项目模型通道</p><p class="mt-1 text-xs text-[#9a958b]">AI 大语言模型</p></div><span class="flex items-center gap-2 rounded-full px-3 py-1.5 text-xs" :class="systemKey?'bg-[#e5eee9] text-[#32695d]':'bg-[#f3e7e3] text-[#b65345]'"><i class="h-1.5 w-1.5 rounded-full bg-current"/>{{ systemKey?'可用':'未配置' }}</span></div>
           </div>
 
@@ -24,7 +15,6 @@
             <div class="flex items-end justify-between"><label class="text-xs tracking-[.12em] text-[#77736a]">你的 API KEY</label><span class="text-[11px] text-[#9a958b]">可选 · 填写后优先使用</span></div>
             <div class="mt-3 flex items-center rounded-2xl border border-[#d9d1c3] bg-white/60 px-4 transition-colors focus-within:border-[#32695d]"><input ref="keyInput" v-model="key" type="text" autocomplete="off" spellcheck="false" placeholder="sk-..." class="min-w-0 flex-1 bg-transparent py-4 font-mono text-sm outline-none"/></div>
             <div class="mt-3 flex items-center gap-2 text-xs text-[#9a958b]"><span class="h-1.5 w-1.5 rounded-full" :class="key.trim()?'bg-[#32695d]':'bg-[#c9c2b7]'"/>{{ key.trim()?'将优先使用你的 API Key 请求 AI，不计入系统用量':'留空则使用项目默认模型' }}</div>
->>>>>>> 62f878f (合并PR: 宣纸UI+所有修复+Makefile+安全更新)
           </div>
 
           <div class="drawer-item mt-8 rounded-2xl bg-[#ebe7dc] p-4 text-xs leading-6 text-[#77736a]"><p class="font-medium text-[#191916]">隐私边界</p><p class="mt-1">Key 只进入 sessionStorage，并随模型请求发送。关闭标签页后浏览器会自动清除。</p></div>

@@ -86,8 +86,6 @@
           </p>
         </div>
       </section>
-<<<<<<< HEAD
-=======
       <section v-else-if="active === 'wallet'" class="space-y-5">
         <div class="rounded-2xl border border-[#d9d1c3] bg-white/55 p-6 text-center">
           <p class="text-xs tracking-[.12em] text-[#77736a]">余额</p>
@@ -102,7 +100,6 @@
           <button class="flex-1 rounded-xl border border-[#b7a178]/50 py-3 text-sm text-[#b7a178] hover:bg-[#ebe7dc] transition-colors" :disabled="wallet.vip_level==='svip'" @click="doBuyVip('svip')">SVIP ¥30/月</button>
         </div>
       </section>
->>>>>>> 62f878f (合并PR: 宣纸UI+所有修复+Makefile+安全更新)
       <section v-else-if="active === 'password'" class="space-y-4">
         <input
           v-model="password.old"
@@ -157,15 +154,6 @@
   >
 </template>
 <script setup lang="ts">
-<<<<<<< HEAD
-import { onMounted, reactive, ref } from "vue";
-import WorkspaceDrawer from "./WorkspaceDrawer.vue";
-import {
-  bindEmail,
-  changePassword,
-  getProfile,
-  getStats,
-=======
 import { onMounted, reactive, ref, watch } from "vue";
 import WorkspaceDrawer from "./WorkspaceDrawer.vue";
 import {
@@ -176,36 +164,25 @@ import {
   getProfile,
   getStats,
   recharge,
->>>>>>> 62f878f (合并PR: 宣纸UI+所有修复+Makefile+安全更新)
   updateProfile,
   updateUsername,
   uploadAvatar,
   verifyEmail,
 } from "../api";
 import { useAuthStore } from "../stores/auth";
-<<<<<<< HEAD
-defineProps<{ open: boolean }>();
-=======
 const props = defineProps<{ open: boolean }>();
->>>>>>> 62f878f (合并PR: 宣纸UI+所有修复+Makefile+安全更新)
 const emit = defineEmits<{ close: [] }>(),
   auth = useAuthStore();
 const tabs = [
     { key: "info", label: "个人信息" },
-<<<<<<< HEAD
-=======
     { key: "wallet", label: "钱包" },
->>>>>>> 62f878f (合并PR: 宣纸UI+所有修复+Makefile+安全更新)
     { key: "password", label: "修改密码" },
     { key: "email", label: "绑定邮箱" },
   ],
   active = ref("info"),
   profile = reactive<any>({}),
   stats = reactive({ total: 0, favorites: 0 }),
-<<<<<<< HEAD
-=======
   wallet = reactive({ balance: 0, vip_level: 'free' as string }),
->>>>>>> 62f878f (合并PR: 宣纸UI+所有修复+Makefile+安全更新)
   loading = ref(true),
   error = ref(""),
   success = ref(""),
@@ -227,16 +204,10 @@ function fail(e: any) {
 async function load() {
   try {
     Object.assign(profile, await getProfile());
-<<<<<<< HEAD
-    Object.assign(stats, await getStats());
-    newUsername.value = profile.username;
-    email.value = profile.email || "";
-=======
     const s = await getStats(); stats.total = s.total_namings || 0; stats.favorites = s.favorites || 0;
     const b = await getBalance();
     Object.assign(wallet, b);
     newUsername.value = profile.username;
->>>>>>> 62f878f (合并PR: 宣纸UI+所有修复+Makefile+安全更新)
   } catch (e) {
     fail(e);
   } finally {
@@ -309,12 +280,9 @@ async function upload(event: Event) {
   };
   reader.readAsDataURL(file);
 }
-<<<<<<< HEAD
-=======
 async function doRecharge(a: number) { try { const r: any = await recharge(a); wallet.balance = r.balance; success.value = '充值成功' } catch (e: any) { error.value = e.message } }
 async function doBuyVip(lvl: string) { try { const r: any = await buyVip(lvl); wallet.balance = r.balance; wallet.vip_level = lvl; success.value = '开通成功' } catch (e: any) { error.value = e.message } }
 watch(() => props.open, v => { if (v) load() });
->>>>>>> 62f878f (合并PR: 宣纸UI+所有修复+Makefile+安全更新)
 onMounted(load);
 </script>
 <style scoped>

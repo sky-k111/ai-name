@@ -8,7 +8,7 @@
   box-sizing: border-box;
 }
 
-html { overflow-y: scroll; }
+html { overflow-y: scroll; scrollbar-gutter: stable; }
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

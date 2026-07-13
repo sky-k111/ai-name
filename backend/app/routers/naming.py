@@ -63,6 +63,8 @@ class NameItem(BaseModel):
     meaning: str
     wuxing: str
     source: str
+    score: int | None = None
+    summary: str | None = None
 
 
 class GenerateResponse(BaseModel):
