@@ -47,6 +47,10 @@
           </header>
           <main
             class="drawer-content min-h-0 flex-1 overflow-y-auto overscroll-contain px-7 py-7 sm:px-10"
+<<<<<<< HEAD
+=======
+            style="max-height: calc(100dvh - 200px); min-height: 400px"
+>>>>>>> 62f878f (合并PR: 宣纸UI+所有修复+Makefile+安全更新)
           >
             <slot />
           </main>
@@ -126,4 +130,10 @@ onBeforeUnmount(() => {
 .drawer-item {
   will-change: transform, opacity;
 }
+<<<<<<< HEAD
+=======
+.drawer-panel {
+  min-height: 500px;
+}
+>>>>>>> 62f878f (合并PR: 宣纸UI+所有修复+Makefile+安全更新)
 </style>

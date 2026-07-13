@@ -19,6 +19,13 @@
           <form ref="formEl" class="mt-10 space-y-5" @submit.prevent="submit">
             <label class="drawer-item field group block"><span>用户名</span><input ref="usernameInput" v-model.trim="username" autocomplete="username" placeholder="输入你的用户名" /></label>
             <label class="drawer-item field group block"><span>密码</span><div class="flex items-center"><input v-model="password" :type="showPassword ? 'text' : 'password'" :autocomplete="registering ? 'new-password' : 'current-password'" placeholder="至少 6 位" class="flex-1"/><button type="button" class="text-xs text-[#77736a] hover:text-[#32695d]" @click="showPassword=!showPassword">{{ showPassword ? '隐藏' : '显示' }}</button></div></label>
+<<<<<<< HEAD
+=======
+            <div v-if="registering && password" class="drawer-item mt-2">
+              <div class="flex gap-1 mb-1"><div class="h-1 flex-1 rounded-full transition-colors" :class="pwStrength >= 1 ? (pwStrength===1?'bg-[#b65345]':pwStrength===2?'bg-[#b7a178]':'bg-[#32695d]') : 'bg-[#d9d1c3]'"/><div class="h-1 flex-1 rounded-full transition-colors" :class="pwStrength >= 2 ? (pwStrength===2?'bg-[#b7a178]':'bg-[#32695d]') : 'bg-[#d9d1c3]'"/><div class="h-1 flex-1 rounded-full transition-colors" :class="pwStrength >= 3 ? 'bg-[#32695d]' : 'bg-[#d9d1c3]'"/></div>
+              <p class="text-xs" :class="pwStrength===1?'text-[#b65345]':pwStrength===2?'text-[#b7a178]':'text-[#32695d]'">{{ ['','弱','中','强'][pwStrength] || '' }}</p>
+            </div>
+>>>>>>> 62f878f (合并PR: 宣纸UI+所有修复+Makefile+安全更新)
             <div class="min-h-5"><p v-if="error" class="text-sm text-[#b65345]">{{ error }}</p></div>
             <button :disabled="loading" class="drawer-item group flex w-full items-center justify-between rounded-full bg-[#32695d] px-6 py-4 text-white shadow-[0_12px_30px_rgba(50,105,93,.18)] transition-transform hover:-translate-y-0.5 disabled:opacity-50"><span>{{ loading ? '请稍候…' : registering ? '注册并继续' : '登录并继续' }}</span><span class="transition-transform group-hover:translate-x-1">→</span></button>
           </form>
@@ -34,7 +41,11 @@
 </template>
 
 <script setup lang="ts">
+<<<<<<< HEAD
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
+=======
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+>>>>>>> 62f878f (合并PR: 宣纸UI+所有修复+Makefile+安全更新)
 import gsap from 'gsap'
 import { login, register } from '../api'
 import { useAuthStore } from '../stores/auth'
@@ -44,6 +55,10 @@ const emit = defineEmits<{ close: []; success: []; guest: [] }>()
 const auth = useAuthStore()
 const layer=ref<HTMLElement>(); const panel=ref<HTMLElement>(); const accent=ref<HTMLElement>(); const copy=ref<HTMLElement>(); const formEl=ref<HTMLFormElement>(); const usernameInput=ref<HTMLInputElement>()
 const username=ref(''); const password=ref(''); const registering=ref(false); const showPassword=ref(false); const loading=ref(false); const error=ref('')
+<<<<<<< HEAD
+=======
+const pwStrength = computed(() => { const p = password.value; if (p.length < 6) return 0; const hasLetter = /[a-zA-Z]/.test(p); const hasDigit = /\d/.test(p); const hasSpecial = /[^a-zA-Z0-9]/.test(p); if (hasLetter && hasDigit && hasSpecial) return 3; if (hasLetter && hasDigit) return 2; return 1 })
+>>>>>>> 62f878f (合并PR: 宣纸UI+所有修复+Makefile+安全更新)
 let timeline: gsap.core.Timeline | null = null
 const media = gsap.matchMedia()
 

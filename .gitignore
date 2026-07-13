@@ -18,4 +18,6 @@ frontend/dist/
 # Misc
 deploy.zip
 *.db-journal
+*.db-shm
+*.db-wal
 migrate_data.py

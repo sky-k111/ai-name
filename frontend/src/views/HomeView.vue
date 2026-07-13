@@ -5,7 +5,11 @@
       <div class="flex items-center gap-5 text-sm text-[#77736a]">
         <button @click="settingsOpen = true"><span class="mr-2 inline-block h-2 w-2 rounded-full" :class="hasUserKey ? 'bg-[#32695d]' : 'bg-[#b7a178]'"/>模型设置</button>
         <template v-if="authStore.isLoggedIn">
+<<<<<<< HEAD
           <button @click="historyOpen=true">历史</button><button @click="favoritesOpen=true">收藏</button><button @click="profileOpen=true">{{ authStore.username }}</button><button class="text-[#b65345]" @click="handleLogout">退出</button>
+=======
+          <button v-if="authStore.isAdmin" @click="$router.push('/admin')">后台</button><button @click="historyOpen=true">历史</button><button @click="favoritesOpen=true">收藏</button><button @click="profileOpen=true">{{ authStore.username }}</button><button class="text-[#b65345]" @click="handleLogout">退出</button>
+>>>>>>> 62f878f (合并PR: 宣纸UI+所有修复+Makefile+安全更新)
         </template>
         <button v-else class="rounded-full border border-[#32695d]/35 px-4 py-2 text-[#32695d]" @click="authOpen = true">登录</button>
       </div>
@@ -14,12 +18,20 @@
     <main class="mx-auto max-w-[1120px] px-6 pb-24">
       <header ref="hero" class="grid gap-8 border-y border-[#d9d1c3] py-12 md:grid-cols-[1.25fr_.75fr] md:py-16">
         <div><p class="hero-line text-xs tracking-[.3em] text-[#32695d]">CHINESE NAMING STUDIO</p><h1 class="hero-line mt-5 max-w-3xl font-serif text-5xl leading-[1.08] tracking-tight md:text-7xl">为一个名字，<br><span class="text-[#32695d]">寻找恰好的出处。</span></h1></div>
+<<<<<<< HEAD
         <div class="hero-line self-end text-sm leading-7 text-[#77736a]"><p>结合音律、五行与文化典故，借助 DeepSeek 生成有依据、可比较、能继续推敲的中文名字。</p></div>
+=======
+        <div class="hero-line self-end text-sm leading-7 text-[#77736a]"><p>结合音律、五行与文化典故，借助大语言模型生成有依据、可比较、能继续推敲的中文名字。</p></div>
+>>>>>>> 62f878f (合并PR: 宣纸UI+所有修复+Makefile+安全更新)
       </header>
 
       <section class="mx-auto mt-10 max-w-[980px]">
         <div ref="workbench" class="min-w-0 rounded-[30px] border border-[#d9d1c3] bg-[#fbfaf6] p-5 shadow-[0_24px_80px_rgba(58,50,38,.08)] md:p-10 lg:p-12">
+<<<<<<< HEAD
           <div class="mb-9 flex items-center justify-between border-b border-[#e5dfd3] pb-6"><div class="flex items-center gap-5"><button class="group grid h-11 w-11 place-items-center rounded-full border border-[#d9d1c3] text-[#32695d] transition-colors hover:bg-[#edf1ed]" aria-label="选择工作方式" @click="openModeDrawer"><span class="space-y-1"><i class="block h-px w-4 bg-current transition-transform group-hover:translate-x-0.5"/><i class="block h-px w-3 bg-current"/><i class="block h-px w-4 bg-current transition-transform group-hover:translate-x-0.5"/></span></button><div><p class="text-xs tracking-[.2em] text-[#b65345]">{{ activeMode.index }} / {{ activeMode.fee }}</p><h2 class="mt-2 font-serif text-3xl md:text-4xl">{{ activeMode.title }}</h2></div></div><span class="rounded-full bg-[#edf1ed] px-3 py-1.5 text-xs text-[#32695d]">DeepSeek</span></div>
+=======
+          <div class="mb-9 flex items-center justify-between border-b border-[#e5dfd3] pb-6"><div class="flex items-center gap-5"><button class="group grid h-11 w-11 place-items-center rounded-full border border-[#d9d1c3] text-[#32695d] transition-colors hover:bg-[#edf1ed]" aria-label="选择工作方式" @click="openModeDrawer"><span class="space-y-1"><i class="block h-px w-4 bg-current transition-transform group-hover:translate-x-0.5"/><i class="block h-px w-3 bg-current"/><i class="block h-px w-4 bg-current transition-transform group-hover:translate-x-0.5"/></span></button><div><p class="text-xs tracking-[.2em] text-[#b65345]">{{ activeMode.index }} / {{ activeMode.fee }}</p><h2 class="mt-2 font-serif text-3xl md:text-4xl">{{ activeMode.title }}</h2></div></div><span class="rounded-full bg-[#edf1ed] px-3 py-1.5 text-xs text-[#32695d]">AI</span></div>
+>>>>>>> 62f878f (合并PR: 宣纸UI+所有修复+Makefile+安全更新)
           <NameAnalyzer v-if="mode === 'analyze'" :auth-guard="requestAuth" />
           <CompareNames v-else-if="mode === 'compare'" :auth-guard="requestAuth" />
           <PremiumNaming v-else-if="mode === 'premium'" :auth-guard="requestAuth" />
@@ -42,9 +54,15 @@
 
     <AuthDrawer :open="authOpen" @close="authOpen = false" @success="afterLogin" @guest="useGuestTrial" />
     <ModelSettingsDrawer :open="settingsOpen" @close="settingsOpen = false" @saved="refreshKeyState" />
+<<<<<<< HEAD
     <HistoryDrawer v-if="historyOpen" :open="true" @close="historyOpen=false" />
     <FavoritesDrawer v-if="favoritesOpen" :open="true" @close="favoritesOpen=false" />
     <ProfileDrawer v-if="profileOpen" :open="true" @close="profileOpen=false" />
+=======
+    <HistoryDrawer v-show="historyOpen" :open="historyOpen" @close="historyOpen=false" />
+    <FavoritesDrawer v-show="favoritesOpen" :open="favoritesOpen" @close="favoritesOpen=false" />
+    <ProfileDrawer v-show="profileOpen" :open="profileOpen" @close="profileOpen=false" />
+>>>>>>> 62f878f (合并PR: 宣纸UI+所有修复+Makefile+安全更新)
     <Transition name="toast"><div v-if="toast" class="fixed left-1/2 top-6 z-[100] -translate-x-1/2 rounded-full px-5 py-3 text-sm text-white shadow-xl" :class="toast.type === 'error' ? 'bg-[#b65345]' : 'bg-[#32695d]'">{{ toast.message }}</div></Transition>
   </div>
 </template>
