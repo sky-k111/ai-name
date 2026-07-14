@@ -1,6 +1,12 @@
 <template>
-  <div class="min-h-screen bg-[#f6f3ec] text-[#191916]">
-    <nav class="mx-auto flex max-w-[1120px] items-center justify-between px-6 py-6">
+  <div class="home-shell min-h-screen text-[#191916]">
+    <div class="home-atmosphere" aria-hidden="true">
+      <span class="atmosphere-mark home-atmosphere__ink" />
+      <span class="atmosphere-mark home-atmosphere__moon" />
+      <span class="atmosphere-mark home-atmosphere__script">声 · 义 · 形</span>
+      <span class="home-atmosphere__rule" />
+    </div>
+    <nav class="home-content mx-auto flex max-w-[1120px] items-center justify-between px-6 py-6">
       <button class="font-serif text-xl tracking-[.12em]" @click="mode = 'name'">名笺</button>
       <div class="flex items-center gap-5 text-sm text-[#77736a]">
         <button @click="settingsOpen = true"><span class="mr-2 inline-block h-2 w-2 rounded-full" :class="hasUserKey ? 'bg-[#32695d]' : 'bg-[#b7a178]'"/>模型设置</button>
@@ -11,14 +17,16 @@
       </div>
     </nav>
 
-    <main class="mx-auto max-w-[1120px] px-6 pb-24">
-      <header ref="hero" class="grid gap-8 border-y border-[#d9d1c3] py-12 md:grid-cols-[1.25fr_.75fr] md:py-16">
+    <main class="home-content mx-auto max-w-[1120px] px-6 pb-24">
+      <header ref="hero" class="home-hero grid gap-8 border-y border-[#d9d1c3] py-12 md:grid-cols-[1.25fr_.75fr] md:py-16">
+        <span class="hero-watermark" aria-hidden="true">名</span>
         <div><p class="hero-line text-xs tracking-[.3em] text-[#32695d]">CHINESE NAMING STUDIO</p><h1 class="hero-line mt-5 max-w-3xl font-serif text-5xl leading-[1.08] tracking-tight md:text-7xl">为一个名字，<br><span class="text-[#32695d]">寻找恰好的出处。</span></h1></div>
         <div class="hero-line self-end text-sm leading-7 text-[#77736a]"><p>结合音律、五行与文化典故，借助大语言模型生成有依据、可比较、能继续推敲的中文名字。</p></div>
       </header>
 
       <section class="mx-auto mt-10 max-w-[980px]">
-        <div ref="workbench" class="min-w-0 rounded-[30px] border border-[#d9d1c3] bg-[#fbfaf6] p-5 shadow-[0_24px_80px_rgba(58,50,38,.08)] md:p-10 lg:p-12">
+        <div ref="workbench" class="workbench-shell min-w-0 rounded-[30px] border border-[#d9d1c3] bg-[#fbfaf6] p-5 shadow-[0_24px_80px_rgba(58,50,38,.08)] md:p-10 lg:p-12">
+          <span class="workbench-coordinate" aria-hidden="true">STUDIO FOLIO / {{ activeMode.index }}</span>
           <div class="mb-9 flex items-center justify-between border-b border-[#e5dfd3] pb-6"><div class="flex items-center gap-5"><button class="group grid h-11 w-11 place-items-center rounded-full border border-[#d9d1c3] text-[#32695d] transition-colors hover:bg-[#edf1ed]" aria-label="选择工作方式" @click="openModeDrawer"><span class="space-y-1"><i class="block h-px w-4 bg-current transition-transform group-hover:translate-x-0.5"/><i class="block h-px w-3 bg-current"/><i class="block h-px w-4 bg-current transition-transform group-hover:translate-x-0.5"/></span></button><div><p class="text-xs tracking-[.2em] text-[#b65345]">{{ activeMode.index }} / {{ activeMode.fee }}</p><h2 class="mt-2 font-serif text-3xl md:text-4xl">{{ activeMode.title }}</h2></div></div><span class="rounded-full bg-[#edf1ed] px-3 py-1.5 text-xs text-[#32695d]">AI</span></div>
           <NameAnalyzer v-if="mode === 'analyze'" :auth-guard="requestAuth" />
           <CompareNames v-else-if="mode === 'compare'" :auth-guard="requestAuth" />
@@ -57,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, nextTick, onMounted, ref } from 'vue'
+import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import gsap from 'gsap'
 import { useAuthStore } from '../stores/auth'
@@ -84,9 +92,11 @@ const formData = ref<GenerateRequest>({ surname:'', gender:'male', birthday:'', 
 const names=ref<NameItem[]>([]); const resultState=ref<LoadState>('idle'); const errorMessage=ref(''); const conversationId=ref(''); const chatHistory=ref<ChatMessage[]>([])
 const isGenerating=ref(false); const isRefining=ref(false); const authOpen=ref(false); const settingsOpen=ref(false); const historyOpen=ref(false); const favoritesOpen=ref(false); const profileOpen=ref(false); const pendingGenerate=ref<GenerateRequest|null>(null); const hasUserKey=ref(!!sessionStorage.getItem(DEEPSEEK_KEY_SESSION)); const toast=ref<{id:number;type:'success'|'info'|'error';title:string;detail:string}|null>(null)
 let toastId = 0
+let pageTimeline: gsap.core.Timeline | null = null
 const showResults=computed(()=>resultState.value!=='idle'); const showRefine=computed(()=>resultState.value==='success')
 
-onMounted(() => { if (!matchMedia('(prefers-reduced-motion: reduce)').matches) gsap.timeline().from('.hero-line',{y:24,opacity:0,duration:.7,stagger:.1,ease:'power3.out'}).from(workbench.value!,{y:28,opacity:0,duration:.65,ease:'power3.out'},'-=.35') })
+onMounted(() => { if (!matchMedia('(prefers-reduced-motion: reduce)').matches) pageTimeline=gsap.timeline().from('.atmosphere-mark',{autoAlpha:0,scale:.92,duration:1.1,stagger:.12,ease:'power2.out'}).from('.hero-line',{y:24,opacity:0,duration:.7,stagger:.1,ease:'power3.out'},.08).from(workbench.value!,{y:28,opacity:0,duration:.65,ease:'power3.out'},'-=.35') })
+onBeforeUnmount(()=>pageTimeline?.kill())
 function changeMode(value:string){ if(value===mode.value)return; mode.value=value; nextTick(()=>{ if(!matchMedia('(prefers-reduced-motion: reduce)').matches) gsap.from(workbench.value!,{opacity:.45,y:8,duration:.28,ease:'power2.out'}) }) }
 async function openModeDrawer(){modeMenuOpen.value=true;await nextTick();if(!matchMedia('(prefers-reduced-motion: reduce)').matches)gsap.timeline({defaults:{ease:'power3.out'}}).fromTo(modeLayer.value!,{autoAlpha:0},{autoAlpha:1,duration:.22}).fromTo(modePanel.value!,{xPercent:-104},{xPercent:0,duration:.52},0).fromTo(modePanel.value!.querySelectorAll('.mode-entry'),{autoAlpha:0,x:-12},{autoAlpha:1,x:0,duration:.35,stagger:.045},.18)}
 function closeModeDrawer(){if(!modeMenuOpen.value)return;if(matchMedia('(prefers-reduced-motion: reduce)').matches){modeMenuOpen.value=false;return}gsap.timeline({onComplete:()=>modeMenuOpen.value=false}).to(modePanel.value!,{xPercent:-104,duration:.38,ease:'power3.in'}).to(modeLayer.value!,{autoAlpha:0,duration:.18},'<.12')}
@@ -122,6 +132,20 @@ function refreshKeyState(){hasUserKey.value=!!sessionStorage.getItem(DEEPSEEK_KE
 </script>
 
 <style scoped>
+.home-shell { position: relative; isolation: isolate; overflow: hidden; background: radial-gradient(circle at 16% 12%,rgba(50,105,93,.07),transparent 27%),radial-gradient(circle at 86% 70%,rgba(183,161,120,.11),transparent 31%),#f6f3ec; }
+.home-shell::before { position: absolute; z-index: -2; inset: 0; opacity: .3; background-image: repeating-radial-gradient(circle at 18% 24%,rgba(52,43,31,.045) 0 .45px,transparent .65px 4px); background-size: 6px 6px; content: ""; pointer-events: none; }
+.home-content { position: relative; z-index: 1; }
+.home-atmosphere { position: absolute; z-index: -1; inset: 0; overflow: hidden; pointer-events: none; }
+.home-atmosphere__ink { position: absolute; top: 5%; left: -15%; width: 58vw; height: 38vw; border-radius: 50%; background: radial-gradient(ellipse,rgba(29,47,39,.13),rgba(50,105,93,.055) 38%,transparent 72%); filter: blur(7px); transform: rotate(13deg); }
+.home-atmosphere__moon { position: absolute; top: 29%; right: 5%; width: clamp(130px,18vw,250px); height: clamp(130px,18vw,250px); border: 1px solid rgba(183,161,120,.17); border-radius: 50%; background: radial-gradient(circle at 38% 36%,rgba(255,255,255,.58),rgba(183,161,120,.08) 58%,transparent 70%); }
+.home-atmosphere__moon::after { position: absolute; inset: 17%; border: 1px solid rgba(50,105,93,.08); border-radius: inherit; content: ""; }
+.home-atmosphere__script { position: absolute; top: 43%; right: 2.2%; color: rgba(50,105,93,.18); font-family: "STKaiti","KaiTi",serif; font-size: 11px; letter-spacing: .52em; writing-mode: vertical-rl; }
+.home-atmosphere__rule { position: absolute; top: 17%; right: 4%; width: 1px; height: 19%; background: linear-gradient(transparent,rgba(183,161,120,.35),transparent); }
+.home-hero { position: relative; }.hero-watermark { position: absolute; z-index: -1; top: 50%; left: 48%; color: rgba(50,105,93,.045); font-family: "STKaiti","KaiTi",serif; font-size: clamp(150px,22vw,300px); line-height: .7; transform: translate(-50%,-50%) rotate(-7deg); }
+.workbench-shell { position: relative; isolation: isolate; background-image: linear-gradient(145deg,rgba(255,255,255,.5),transparent 43%),radial-gradient(circle at 95% 5%,rgba(183,161,120,.12),transparent 22%); }
+.workbench-shell::after { position: absolute; z-index: -1; right: -22px; bottom: -22px; width: 120px; height: 120px; border-right: 1px solid rgba(50,105,93,.14); border-bottom: 1px solid rgba(50,105,93,.14); border-radius: 0 0 34px; content: ""; pointer-events: none; }
+.workbench-coordinate { position: absolute; top: 24px; right: 32px; color: rgba(50,105,93,.34); font-size: 7px; letter-spacing: .2em; }
 :deep(.bg-\[\#0071e3\]){background-color:#32695d}:deep(.text-\[\#0071e3\]){color:#32695d}:deep(.bg-white\/80){background-color:rgba(255,255,255,.66)}
+@media(max-width:700px){.home-atmosphere__ink{top:2%;left:-42%;width:120vw;height:86vw}.home-atmosphere__moon{top:23%;right:-24%}.home-atmosphere__script,.home-atmosphere__rule,.workbench-coordinate{display:none}.hero-watermark{left:70%;font-size:52vw}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition-duration:.01ms!important}}
 </style>

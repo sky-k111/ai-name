@@ -4,7 +4,8 @@
     title="收藏名笺"
     kicker="NAME COLLECTION"
     description="留住值得继续推敲的名字"
-    width="640px"
+    width="680px"
+    :suspended="!!selected"
     @close="emit('close')"
   >
     <div v-if="loading" class="collection-loading" aria-label="正在取出收藏" aria-busy="true">
@@ -23,11 +24,12 @@
       <article v-for="(item, index) in items" :key="item.id" class="collection-card">
         <span class="collection-card__rule" aria-hidden="true" />
         <div class="collection-card__header">
-          <div>
+          <button class="collection-card__identity" type="button" :aria-label="`打开 ${item.full_name} 的完整名笺`" @click="openDetail(item, index, $event)">
             <p>COLLECTED · {{ String(index + 1).padStart(2, "0") }}</p>
             <h3>{{ item.full_name }}</h3>
-          </div>
+          </button>
           <button
+            class="collection-card__remove"
             type="button"
             :disabled="removing.includes(item.id)"
             :aria-label="`取消收藏 ${item.full_name}`"
@@ -41,14 +43,20 @@
           <div v-if="item.name_data?.wuxing"><dt>五行</dt><dd>{{ item.name_data.wuxing }}</dd></div>
           <div v-if="item.name_data?.source"><dt>出处</dt><dd>{{ item.name_data.source }}</dd></div>
         </dl>
+        <button class="collection-card__folio" type="button" @click="openDetail(item, index, $event)">
+          <span>展开完整名笺</span>
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 6l4 4-4 4" /></svg>
+        </button>
       </article>
     </div>
   </WorkspaceDrawer>
+  <NameDetailSheet v-if="selected" :name="selected.name" :index="selected.index" @close="closeDetail" />
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { nextTick, ref, watch } from "vue";
 import WorkspaceDrawer from "./WorkspaceDrawer.vue";
+import NameDetailSheet from "./NameDetailSheet.vue";
 import { getFavorites, removeFavorite } from "../api";
 import type { NameItem } from "../types";
 
@@ -59,6 +67,8 @@ const items = ref<FavoriteItem[]>([]);
 const loading = ref(true);
 const error = ref("");
 const removing = ref<number[]>([]);
+const selected = ref<{ name: NameItem; index: number } | null>(null);
+let detailTrigger: HTMLElement | null = null;
 
 watch(() => props.open, (value) => { if (value) load(); }, { immediate: true });
 async function load() {
@@ -74,6 +84,25 @@ async function remove(id: number) {
   catch (cause: any) { error.value = cause.message || "取消收藏失败"; }
   finally { removing.value = removing.value.filter((value) => value !== id); }
 }
+function openDetail(item: FavoriteItem, index: number, event: MouseEvent) {
+  detailTrigger = event.currentTarget as HTMLElement;
+  const data = item.name_data || {};
+  selected.value = {
+    index,
+    name: {
+      ...data,
+      full_name: item.full_name,
+      meaning: data.meaning || "这枚名字已经收入收藏，等待继续补充它的寓意。",
+      wuxing: data.wuxing || "",
+      source: data.source || "",
+    },
+  };
+}
+async function closeDetail() {
+  selected.value = null;
+  await nextTick();
+  detailTrigger?.focus();
+}
 </script>
 
 <style scoped>
@@ -82,14 +111,16 @@ async function remove(id: number) {
 .collection-card:hover { transform: translateY(-1px); border-color: rgba(50,105,93,.42); box-shadow: 0 14px 34px rgba(58,50,38,.08); }
 .collection-card__rule { position: absolute; top: 0; left: 0; width: 108px; height: 2px; background: linear-gradient(90deg,#32695d 0 58%,#b7a178 58%); }
 .collection-card__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.collection-card__identity { min-width: 0; cursor: pointer; text-align: left; }
 .collection-card__header p { color: #8e887e; font-size: 9px; letter-spacing: .16em; }
 .collection-card h3 { margin-top: 9px; font-family: "Songti SC","STSong",serif; font-size: 31px; font-weight: 400; letter-spacing: .07em; }
-.collection-card__header button { display: grid; width: 44px; height: 44px; flex: 0 0 44px; cursor: pointer; place-items: center; border-radius: 50%; color: #a64235; transition: background-color 180ms ease; }
-.collection-card__header button:hover { background: rgba(166,66,53,.08); }.collection-card__header button:disabled { cursor: wait; opacity: .4; }.collection-card__header button:focus-visible,.collection-state button:focus-visible { outline: 2px solid #32695d; outline-offset: 3px; }
+.collection-card__remove { display: grid; width: 44px; height: 44px; flex: 0 0 44px; cursor: pointer; place-items: center; border-radius: 50%; color: #a64235; transition: background-color 180ms ease; }
+.collection-card__remove:hover { background: rgba(166,66,53,.08); }.collection-card__remove:disabled { cursor: wait; opacity: .4; }.collection-card button:focus-visible,.collection-state button:focus-visible { outline: 2px solid #32695d; outline-offset: 3px; }
 .collection-card__header svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.35; }
 .collection-card__meaning { margin-top: 16px; color: #57534b; font-size: 13px; line-height: 1.8; }
 .collection-card dl { display: grid; grid-template-columns: .6fr 1.4fr; gap: 16px; margin-top: 17px; padding-top: 15px; border-top: 1px solid rgba(183,161,120,.24); }
 .collection-card dt { color: #918b80; font-size: 9px; letter-spacing: .15em; }.collection-card dd { margin-top: 5px; color: #393730; font-family: "Songti SC","STSong",serif; font-size: 13px; line-height: 1.55; }
+.collection-card__folio { display: inline-flex; min-height: 42px; cursor: pointer; align-items: center; gap: 9px; margin-top: 14px; color: #32695d; font-size: 11px; letter-spacing: .06em; }.collection-card__folio svg { width: 17px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.4; transition: transform 180ms ease; }.collection-card__folio:hover svg { transform: translateX(3px); }
 .collection-loading article { position: relative; overflow: hidden; height: 162px; border: 1px solid rgba(183,161,120,.25); border-radius: 21px; background: rgba(255,255,255,.42); padding: 24px; }
 .collection-loading article::after { position: absolute; inset: 0; background: linear-gradient(105deg,transparent 30%,rgba(255,255,255,.65) 48%,transparent 65%); content: ""; animation: collection-shimmer 1.6s ease-in-out infinite; transform: translateX(-100%); }
 .collection-loading i,.collection-loading b,.collection-loading span { display: block; border-radius: 999px; background: rgba(183,174,157,.27); }.collection-loading i { width: 120px; height: 8px; }.collection-loading b { width: 140px; height: 30px; margin-top: 15px; border-radius: 4px; }.collection-loading span { width: 85%; height: 10px; margin-top: 22px; }
