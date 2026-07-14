@@ -26,7 +26,7 @@
       </label>
 
       <fieldset class="gender-field" :disabled="disabled">
-        <legend class="field-heading"><span>性别</span><em>必填</em></legend>
+        <legend class="field-heading"><span>性别</span></legend>
         <div class="gender-options">
           <button
             v-for="option in genderOptions"
@@ -45,7 +45,7 @@
 
     <div class="writing-form__timing">
       <label class="line-field">
-        <span class="field-heading"><span>出生日期</span><em>可选</em></span>
+        <span class="field-heading"><span>出生日期</span></span>
         <span class="line-field__control">
           <input
             v-model="form.birthday"
@@ -58,7 +58,7 @@
       </label>
 
       <label class="line-field">
-        <span class="field-heading"><span>出生时辰</span><em>可选</em></span>
+        <span class="field-heading"><span>出生时辰</span></span>
         <span class="line-field__control line-field__control--select">
           <select v-model="form.birth_time" :disabled="disabled" aria-label="出生时辰" @change="syncModel">
             <option value="">请选择时辰</option>
@@ -72,11 +72,10 @@
     <section class="writing-form__optional" aria-labelledby="optional-title">
       <div class="optional-heading">
         <p id="optional-title">补充线索</p>
-        <span>OPTIONAL NOTES</span>
       </div>
 
       <label class="line-field line-field--wide">
-        <span class="field-heading"><span>期待风格</span><em>可选</em></span>
+        <span class="field-heading"><span>取名风格</span></span>
         <span class="line-field__control">
           <input
             v-model.trim="form.style"
@@ -90,12 +89,12 @@
       </label>
 
       <label class="note-field">
-        <span class="field-heading"><span>关于这个名字的期待</span><em>可选</em></span>
+        <span class="field-heading"><span>其他说明</span></span>
         <textarea
           v-model.trim="form.expectations"
           maxlength="200"
           rows="3"
-          placeholder="可以写下寓意、字数、避讳字，或你希望名字传达的气质。"
+          placeholder="例如寓意、字数、避讳字，或希望名字传达的气质。"
           :disabled="disabled"
           @input="syncModel"
         />
@@ -104,11 +103,7 @@
     </section>
 
     <footer class="writing-form__footer">
-      <div>
-        <p>信息越完整，名字越贴近你的期待。</p>
-        <span v-if="!loading">预计等待 {{ estimate || "5–10" }} 秒</span>
-        <span v-else role="status">正在研读信息并生成候选名字</span>
-      </div>
+      <p>填写姓氏即可开始，其他线索用于提高匹配度。</p>
       <button type="submit" :disabled="disabled || !canSubmit" class="submit-button">
         <span v-if="loading" class="submit-button__spinner" aria-hidden="true" />
         <span>{{ loading ? "正在生成" : "生成名字" }}</span>
@@ -126,7 +121,6 @@ const props = defineProps<{
   modelValue: GenerateRequest;
   loading: boolean;
   disabled: boolean;
-  estimate?: string;
 }>();
 const emit = defineEmits<{
   "update:modelValue": [value: GenerateRequest];
@@ -154,34 +148,34 @@ function handleSubmit() { if (canSubmit.value && !props.disabled) emit("submit",
 .writing-form__primary { display: grid; grid-template-columns: minmax(0,1.45fr) minmax(230px,.75fr); gap: 0; }
 .surname-field,.gender-field { min-width: 0; padding: 29px 30px 26px; }
 .gender-field { border-left: 1px solid rgba(183,161,120,.26); }
-.field-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #5e5a52; font-size: 12px; font-style: normal; letter-spacing: .08em; }
-.field-heading em { color: #9a9489; font-size: 9px; font-style: normal; letter-spacing: .14em; }
+.field-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #4f4b44; font-size: 14px; font-style: normal; font-weight: 500; letter-spacing: .05em; }
+.field-heading em { color: #8f887d; font-size: 10px; font-style: normal; font-weight: 400; letter-spacing: .12em; }
 .surname-field__input { display: flex; align-items: baseline; margin-top: 15px; border-bottom: 1px solid rgba(50,105,93,.34); }
 .surname-field__input::after,.line-field__control::after { position: absolute; right: 0; bottom: -1px; left: 0; height: 1px; background: #32695d; content: ""; transform: scaleX(0); transform-origin: left; transition: transform 220ms ease; }
 .surname-field:focus-within .surname-field__input::after,.line-field:focus-within .line-field__control::after { transform: scaleX(1); }
 .surname-field__input { position: relative; }
 .surname-field__input input { min-width: 0; flex: 1; background: transparent; padding: 3px 0 9px; color: #191916; font-family: "Songti SC","STSong",serif; font-size: clamp(34px,4.5vw,48px); line-height: 1.1; letter-spacing: .08em; outline: none; }
 .surname-field__input input::placeholder { color: #c2bcb0; }.surname-field__input i { color: #aaa296; font-family: "STKaiti","KaiTi",serif; font-size: 18px; font-style: normal; }
-.surname-field small { display: block; margin-top: 9px; color: #9a9489; font-size: 10px; }
+.surname-field small { display: block; margin-top: 9px; color: #777168; font-size: 12px; }
 .gender-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 17px; }
 .gender-options button { display: flex; min-height: 66px; cursor: pointer; align-items: center; justify-content: center; gap: 10px; border: 1px solid rgba(183,161,120,.38); border-radius: 14px; background: rgba(255,255,255,.34); color: #68635a; transition: border-color 180ms ease,background-color 180ms ease,color 180ms ease; }
 .gender-options button:hover { border-color: rgba(50,105,93,.42); }.gender-options button.is-active { border-color: #32695d; background: rgba(50,105,93,.08); color: #32695d; }
-.gender-options button > span { display: grid; width: 27px; height: 31px; place-items: center; border: 1px solid currentColor; font-family: "STKaiti","KaiTi",serif; font-size: 12px; }.gender-options strong { font-size: 15px; font-weight: 500; }
+.gender-options button > span { display: grid; width: 29px; height: 33px; place-items: center; border: 1px solid currentColor; font-family: "STKaiti","KaiTi",serif; font-size: 13px; }.gender-options strong { font-size: 16px; font-weight: 500; }
 .writing-form__timing { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid rgba(183,161,120,.26); border-bottom: 1px solid rgba(183,161,120,.26); }
 .line-field { min-width: 0; padding: 22px 30px 21px; }.line-field + .line-field { border-left: 1px solid rgba(183,161,120,.26); }
 .line-field__control { position: relative; display: flex; align-items: center; margin-top: 10px; border-bottom: 1px solid rgba(183,161,120,.28); }
-.line-field input,.line-field select { min-width: 0; min-height: 44px; width: 100%; cursor: text; appearance: none; border: 0; background: transparent; color: #292923; font-size: 14px; outline: none; }
+.line-field input,.line-field select { min-width: 0; min-height: 46px; width: 100%; cursor: text; appearance: none; border: 0; background: transparent; color: #292923; font-size: 16px; outline: none; }
 .line-field select { cursor: pointer; padding-right: 28px; }.line-field input::placeholder,.note-field textarea::placeholder { color: #aaa49a; }
 .line-field__control--select svg { position: absolute; right: 2px; width: 18px; height: 18px; fill: none; stroke: #77736a; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.4; pointer-events: none; }
-.writing-form__optional { padding: 25px 30px 27px; }.optional-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; }.optional-heading p { font-family: "Songti SC","STSong",serif; font-size: 21px; }.optional-heading span { color: #9a9489; font-size: 9px; letter-spacing: .18em; }
-.line-field--wide { margin-top: 20px; padding: 0; }.note-field { position: relative; display: block; margin-top: 24px; }.note-field textarea { width: 100%; min-height: 102px; resize: vertical; border: 1px solid rgba(183,161,120,.3); border-radius: 15px; background: rgba(255,255,255,.34); margin-top: 11px; padding: 14px 16px 28px; color: #292923; font-size: 14px; line-height: 1.8; outline: none; transition: border-color 180ms ease,background-color 180ms ease; }.note-field textarea:focus { border-color: #32695d; background: rgba(255,255,255,.58); }.note-field__count { position: absolute; right: 13px; bottom: 10px; color: #aaa49a; font-size: 9px; letter-spacing: .08em; }
-.writing-form__footer { display: flex; align-items: center; justify-content: space-between; gap: 24px; border-top: 1px solid rgba(183,161,120,.26); padding: 22px 30px; background: rgba(235,231,220,.35); }.writing-form__footer p { color: #555149; font-family: "Songti SC","STSong",serif; font-size: 13px; }.writing-form__footer div > span { display: block; margin-top: 5px; color: #928c81; font-size: 10px; }
-.submit-button { display: inline-flex; min-width: 158px; min-height: 50px; cursor: pointer; align-items: center; justify-content: center; gap: 12px; border-radius: 999px; background: #32695d; padding: 0 23px; color: white; box-shadow: 0 12px 26px rgba(50,105,93,.18); font-size: 14px; transition: background-color 180ms ease,box-shadow 180ms ease,transform 180ms ease; }.submit-button:hover:not(:disabled) { background: #285b50; box-shadow: 0 15px 32px rgba(50,105,93,.24); transform: translateY(-1px); }.submit-button:active:not(:disabled) { transform: translateY(0); }.submit-button:disabled { cursor: not-allowed; opacity: .42; box-shadow: none; }.submit-button:focus-visible,.gender-options button:focus-visible { outline: 2px solid #32695d; outline-offset: 3px; }
+.writing-form__optional { padding: 25px 30px 27px; }.optional-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; }.optional-heading p { font-family: "Songti SC","STSong",serif; font-size: 24px; }
+.line-field--wide { margin-top: 20px; padding: 0; }.note-field { position: relative; display: block; margin-top: 24px; }.note-field textarea { width: 100%; min-height: 108px; resize: vertical; border: 1px solid rgba(183,161,120,.3); border-radius: 15px; background: rgba(255,255,255,.34); margin-top: 11px; padding: 15px 16px 29px; color: #292923; font-size: 16px; line-height: 1.75; outline: none; transition: border-color 180ms ease,background-color 180ms ease; }.note-field textarea:focus { border-color: #32695d; background: rgba(255,255,255,.58); }.note-field__count { position: absolute; right: 13px; bottom: 10px; color: #918b80; font-size: 11px; letter-spacing: .06em; }
+.writing-form__footer { display: flex; align-items: center; justify-content: space-between; gap: 24px; border-top: 1px solid rgba(183,161,120,.26); padding: 22px 30px; background: rgba(235,231,220,.35); }.writing-form__footer > p { max-width: 420px; color: #555149; font-family: "Songti SC","STSong",serif; font-size: 14px; line-height: 1.65; }
+.submit-button { display: inline-flex; min-width: 158px; min-height: 50px; cursor: pointer; align-items: center; justify-content: center; gap: 12px; border-radius: 999px; background: #32695d; padding: 0 23px; color: white; box-shadow: 0 12px 26px rgba(50,105,93,.18); font-size: 15px; transition: background-color 180ms ease,box-shadow 180ms ease,transform 180ms ease; }.submit-button:hover:not(:disabled) { background: #285b50; box-shadow: 0 15px 32px rgba(50,105,93,.24); transform: translateY(-1px); }.submit-button:active:not(:disabled) { transform: translateY(0); }.submit-button:disabled { cursor: not-allowed; opacity: .42; box-shadow: none; }.submit-button:focus-visible,.gender-options button:focus-visible { outline: 2px solid #32695d; outline-offset: 3px; }
 .submit-button svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5; }.submit-button__spinner { width: 17px; height: 17px; border: 2px solid rgba(255,255,255,.35); border-top-color: white; border-radius: 50%; animation: ink-spin .8s linear infinite; }
 input:disabled,select:disabled,textarea:disabled,fieldset:disabled { cursor: not-allowed; opacity: .62; }
 @keyframes ink-spin { to { transform: rotate(360deg); } }
 @media (max-width: 700px) {
-  .writing-form { border-radius: 20px; }.writing-form__primary,.writing-form__timing { grid-template-columns: 1fr; }.surname-field,.gender-field,.line-field,.writing-form__optional,.writing-form__footer { padding-inline: 20px; }.gender-field,.line-field + .line-field { border-left: 0; border-top: 1px solid rgba(183,161,120,.26); }.writing-form__footer { align-items: stretch; flex-direction: column; }.submit-button { width: 100%; }.optional-heading { align-items: flex-start; flex-direction: column; gap: 5px; }
+  .writing-form { border-radius: 20px; }.writing-form__primary,.writing-form__timing { grid-template-columns: 1fr; }.surname-field,.gender-field,.line-field,.writing-form__optional,.writing-form__footer { padding-inline: 20px; }.gender-field,.line-field + .line-field { border-left: 0; border-top: 1px solid rgba(183,161,120,.26); }.writing-form__footer { align-items: stretch; flex-direction: column; }.submit-button { width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) { .surname-field__input::after,.line-field__control::after,.gender-options button,.note-field textarea,.submit-button { transition-duration: .01ms!important; }.submit-button__spinner { animation-duration: 1.5s; } }
 </style>

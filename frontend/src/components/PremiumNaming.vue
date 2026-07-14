@@ -1,6 +1,6 @@
 <template>
   <div class="w-full max-w-[820px] mx-auto">
-    <NameForm v-model="form" :loading="loading" :disabled="loading" estimate="10-15" @submit="handleSubmit" />
+    <NameForm v-model="form" :loading="loading" :disabled="loading" @submit="handleSubmit" />
     <ActionToast
       v-if="toast"
       :key="toast.id"

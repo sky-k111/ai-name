@@ -26,7 +26,6 @@
 
       <section class="mx-auto mt-10 max-w-[980px]">
         <div ref="workbench" class="workbench-shell min-w-0 rounded-[30px] border border-[#d9d1c3] bg-[#fbfaf6] p-5 shadow-[0_24px_80px_rgba(58,50,38,.08)] md:p-10 lg:p-12">
-          <span class="workbench-coordinate" aria-hidden="true">STUDIO FOLIO / {{ activeMode.index }}</span>
           <div class="mb-9 flex items-center justify-between border-b border-[#e5dfd3] pb-6"><div class="flex items-center gap-5"><button class="group grid h-11 w-11 place-items-center rounded-full border border-[#d9d1c3] text-[#32695d] transition-colors hover:bg-[#edf1ed]" aria-label="选择工作方式" @click="openModeDrawer"><span class="space-y-1"><i class="block h-px w-4 bg-current transition-transform group-hover:translate-x-0.5"/><i class="block h-px w-3 bg-current"/><i class="block h-px w-4 bg-current transition-transform group-hover:translate-x-0.5"/></span></button><div><p class="text-xs tracking-[.2em] text-[#b65345]">{{ activeMode.index }} / {{ activeMode.fee }}</p><h2 class="mt-2 font-serif text-3xl md:text-4xl">{{ activeMode.title }}</h2></div></div><span class="rounded-full bg-[#edf1ed] px-3 py-1.5 text-xs text-[#32695d]">AI</span></div>
           <NameAnalyzer v-if="mode === 'analyze'" :auth-guard="requestAuth" />
           <CompareNames v-else-if="mode === 'compare'" :auth-guard="requestAuth" />
@@ -144,8 +143,7 @@ function refreshKeyState(){hasUserKey.value=!!sessionStorage.getItem(DEEPSEEK_KE
 .home-hero { position: relative; }.hero-watermark { position: absolute; z-index: -1; top: 50%; left: 48%; color: rgba(50,105,93,.045); font-family: "STKaiti","KaiTi",serif; font-size: clamp(150px,22vw,300px); line-height: .7; transform: translate(-50%,-50%) rotate(-7deg); }
 .workbench-shell { position: relative; isolation: isolate; background-image: linear-gradient(145deg,rgba(255,255,255,.5),transparent 43%),radial-gradient(circle at 95% 5%,rgba(183,161,120,.12),transparent 22%); }
 .workbench-shell::after { position: absolute; z-index: -1; right: -22px; bottom: -22px; width: 120px; height: 120px; border-right: 1px solid rgba(50,105,93,.14); border-bottom: 1px solid rgba(50,105,93,.14); border-radius: 0 0 34px; content: ""; pointer-events: none; }
-.workbench-coordinate { position: absolute; top: 24px; right: 32px; color: rgba(50,105,93,.34); font-size: 7px; letter-spacing: .2em; }
 :deep(.bg-\[\#0071e3\]){background-color:#32695d}:deep(.text-\[\#0071e3\]){color:#32695d}:deep(.bg-white\/80){background-color:rgba(255,255,255,.66)}
-@media(max-width:700px){.home-atmosphere__ink{top:2%;left:-42%;width:120vw;height:86vw}.home-atmosphere__moon{top:23%;right:-24%}.home-atmosphere__script,.home-atmosphere__rule,.workbench-coordinate{display:none}.hero-watermark{left:70%;font-size:52vw}}
+@media(max-width:700px){.home-atmosphere__ink{top:2%;left:-42%;width:120vw;height:86vw}.home-atmosphere__moon{top:23%;right:-24%}.home-atmosphere__script,.home-atmosphere__rule{display:none}.hero-watermark{left:70%;font-size:52vw}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition-duration:.01ms!important}}
 </style>
