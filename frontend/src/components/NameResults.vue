@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full max-w-[820px] mx-auto">
+  <div class="w-full max-w-[920px] mx-auto">
     <!-- 空状态：初始 -->
     <div
       v-if="state === 'idle'"
@@ -43,22 +43,14 @@
     </div>
 
     <!-- 成功：名字卡片 -->
-    <div v-if="state === 'success'" class="space-y-5">
-      <RecommendedNameCard
-        v-for="(name, idx) in names"
-        :key="name.full_name"
-        :name="name"
-        :index="idx"
-        @favorite="emit('favorite', $event)"
-      />
-    </div>
+    <NameGallery v-if="state === 'success'" :names="names" @favorite="emit('favorite', $event)" />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { FavoriteAction, LoadState, NameItem } from '../types'
 import NameCardSkeleton from './NameCardSkeleton.vue'
-import RecommendedNameCard from './RecommendedNameCard.vue'
+import NameGallery from './NameGallery.vue'
 
 const props = defineProps<{
   names: NameItem[]

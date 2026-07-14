@@ -1,5 +1,5 @@
 <template>
-  <div class="premium-results w-full max-w-[820px] mx-auto">
+  <div class="premium-results w-full max-w-[920px] mx-auto">
     <div v-if="state==='idle'" class="result-notice" aria-live="polite">
       <span class="result-notice__seal" aria-hidden="true">候</span>
       <p>写下取名线索，名帖会在这里展开</p>
@@ -28,15 +28,7 @@
       </button>
     </div>
 
-    <div v-if="state==='success'" class="space-y-5">
-      <RecommendedNameCard
-        v-for="(name, idx) in names"
-        :key="name.full_name"
-        :name="name"
-        :index="idx"
-        @favorite="emit('favorite', $event)"
-      />
-    </div>
+    <NameGallery v-if="state==='success'" :names="names" @favorite="emit('favorite', $event)" />
   </div>
 </template>
 
@@ -44,7 +36,7 @@
 import { nextTick, ref } from 'vue'
 import type { FavoriteAction, LoadState, NameItem } from '../types'
 import NameCardSkeleton from './NameCardSkeleton.vue'
-import RecommendedNameCard from './RecommendedNameCard.vue'
+import NameGallery from './NameGallery.vue'
 
 const props = defineProps<{ names: NameItem[]; state: LoadState; errorMessage: string }>()
 const emit = defineEmits<{ retry: []; favorite: [action: FavoriteAction] }>()

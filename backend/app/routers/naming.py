@@ -65,6 +65,15 @@ class NameItem(BaseModel):
     source: str
     score: int | None = None
     summary: str | None = None
+    source_quote: str | None = None
+    source_context: str | None = None
+    character_meaning: str | None = None
+    naming_story: str | None = None
+    usage_advice: str | None = None
+    bazi: str | None = None
+    sound_analysis: str | None = None
+    char_analysis: str | None = None
+    popularity: str | None = None
 
 
 class GenerateResponse(BaseModel):

@@ -1,5 +1,9 @@
 <template>
-  <article ref="card" class="name-card" :class="{ 'is-expanded': expanded }">
+  <article
+    ref="card"
+    class="name-card"
+    :class="[`name-card--${variant}`, { 'is-expanded': expanded }]"
+  >
     <span ref="rule" class="name-card__rule" aria-hidden="true" />
     <div class="name-card__paper" aria-hidden="true" />
 
@@ -75,28 +79,38 @@
 
       <footer class="name-card__footer">
         <span class="name-card__quiet">一名一笺，自有来处</span>
-
-        <button
-          ref="favoriteButton"
-          type="button"
-          class="name-card__action name-card__action--favorite"
-          :class="{
-            'is-saving': favoriteState === 'saving',
-            'is-saved': favoriteState === 'saved',
-            'is-error': favoriteState === 'error',
-          }"
-          :aria-label="favoriteAriaLabel"
-          :aria-pressed="favoriteState === 'saved'"
-          :disabled="favoriteState === 'saving' || favoriteState === 'saved'"
-          @click="handleFavorite"
-        >
-          <span ref="favoriteRing" class="name-card__favorite-ring" aria-hidden="true" />
-          <svg ref="favoriteIcon" viewBox="0 0 20 20" aria-hidden="true">
-            <path d="M5.5 3.25h9v13.5L10 13.9l-4.5 2.85V3.25Z" />
-          </svg>
-          <span>{{ favoriteLabel }}</span>
-          <span v-if="favoriteState === 'saved'" ref="favoriteStamp" class="name-card__favorite-stamp" aria-hidden="true">藏</span>
-        </button>
+        <div class="name-card__actions">
+          <button
+            type="button"
+            class="name-card__action name-card__action--folio"
+            :aria-label="`查看名字 ${name.full_name} 的完整名笺`"
+            @click="emit('detail', name)"
+          >
+            <span>完整名笺</span>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 6l4 4-4 4" /></svg>
+          </button>
+          <button
+            ref="favoriteButton"
+            type="button"
+            class="name-card__action name-card__action--favorite"
+            :class="{
+              'is-saving': favoriteState === 'saving',
+              'is-saved': favoriteState === 'saved',
+              'is-error': favoriteState === 'error',
+            }"
+            :aria-label="favoriteAriaLabel"
+            :aria-pressed="favoriteState === 'saved'"
+            :disabled="favoriteState === 'saving' || favoriteState === 'saved'"
+            @click="handleFavorite"
+          >
+            <span ref="favoriteRing" class="name-card__favorite-ring" aria-hidden="true" />
+            <svg ref="favoriteIcon" viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M5.5 3.25h9v13.5L10 13.9l-4.5 2.85V3.25Z" />
+            </svg>
+            <span>{{ favoriteLabel }}</span>
+            <span v-if="favoriteState === 'saved'" ref="favoriteStamp" class="name-card__favorite-stamp" aria-hidden="true">藏</span>
+          </button>
+        </div>
       </footer>
     </div>
   </article>
@@ -107,8 +121,8 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import gsap from "gsap";
 import type { FavoriteAction, FavoriteCompletion, NameItem } from "../types";
 
-const props = defineProps<{ name: NameItem; index: number }>();
-const emit = defineEmits<{ favorite: [action: FavoriteAction] }>();
+const props = withDefaults(defineProps<{ name: NameItem; index: number; variant?: "featured" | "compact" }>(), { variant: "featured" });
+const emit = defineEmits<{ favorite: [action: FavoriteAction]; detail: [name: NameItem] }>();
 const card = ref<HTMLElement>();
 const rule = ref<HTMLElement>();
 const favoriteButton = ref<HTMLButtonElement>();
@@ -297,9 +311,14 @@ onBeforeUnmount(() => {
 .name-card__details h4 { margin-top: 7px; font-family: "Songti SC", "STSong", serif; font-size: 17px; font-weight: 400; }
 .name-card__details section > div { margin-top: 9px; color: #5d5950; font-size: 13px; line-height: 1.75; }
 .name-card__footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 17px; padding-top: 16px; border-top: 1px solid rgba(183, 161, 120, 0.2); }
+.name-card__actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
 .name-card__action { display: inline-flex; cursor: pointer; align-items: center; gap: 8px; border-radius: 999px; color: #32695d; font-size: 12px; transition: color 180ms ease, background-color 180ms ease; }
 .name-card__action:focus-visible { outline: 2px solid #32695d; outline-offset: 4px; }
 .name-card__action svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5; }
+.name-card__action--folio { min-height: 39px; padding: 0 12px; }
+.name-card__action--folio:hover { background: rgba(50, 105, 93, 0.08); }
+.name-card__action--folio svg { transition: transform 180ms ease; }
+.name-card__action--folio:hover svg { transform: translateX(2px); }
 .name-card__action--favorite { position: relative; overflow: visible; min-width: 112px; justify-content: center; padding: 9px 13px; border: 1px solid rgba(50, 105, 93, 0.28); }
 .name-card__action--favorite:hover { background: rgba(50, 105, 93, 0.08); }
 .name-card__action--favorite:disabled { cursor: default; opacity: 1; }
@@ -311,6 +330,21 @@ onBeforeUnmount(() => {
 .name-card__favorite-ring { position: absolute; width: 30px; height: 30px; border: 1px solid rgba(166, 66, 53, 0.58); border-radius: 999px; opacity: 0; pointer-events: none; }
 .name-card__favorite-stamp { display: grid; width: 22px; height: 22px; place-items: center; border: 1px solid rgba(166, 66, 53, 0.58); color: #9b4035; font-family: "STKaiti", "KaiTi", serif; font-size: 10px; transform: rotate(-3deg); }
 .name-card__quiet { color: #918b80; font-family: "Songti SC", "STSong", serif; font-size: 12px; }
+.name-card--compact { border-radius: 22px; }
+.name-card--compact .name-card__body { padding: 24px 22px 20px; }
+.name-card--compact .name-card__name { font-size: 38px; }
+.name-card--compact .name-card__seal { flex-basis: 50px; height: 56px; }
+.name-card--compact .name-card__seal::before { width: 41px; height: 47px; }
+.name-card--compact .name-card__meaning { font-size: 14px; line-height: 1.8; }
+.name-card--compact .name-card__preview { align-items: flex-start; flex-direction: column; gap: 12px; }
+.name-card--compact .name-card__preview-tags > span { max-width: 310px; }
+.name-card--compact .name-card__meta { grid-template-columns: 1fr 1fr; }
+.name-card--compact .name-card__meta div:nth-child(2) { grid-column: 1 / -1; grid-row: 2; }
+.name-card--compact .name-card__details { grid-template-columns: 1fr; }
+.name-card--compact .name-card__footer { align-items: stretch; flex-direction: column; }
+.name-card--compact .name-card__quiet { display: none; }
+.name-card--compact .name-card__actions { display: grid; grid-template-columns: 1fr 1fr; }
+.name-card--compact .name-card__action { min-width: 0; justify-content: center; white-space: nowrap; }
 @keyframes bookmark-breathe { to { opacity: 0.48; transform: translateY(-1px); } }
 
 @media (max-width: 640px) {
@@ -326,6 +360,8 @@ onBeforeUnmount(() => {
   .name-card__preview { align-items: flex-start; flex-direction: column; gap: 12px; }
   .name-card__preview-tags > span { max-width: min(250px, 72vw); }
   .name-card__footer { align-items: stretch; flex-direction: column; }
+  .name-card__actions { display: grid; grid-template-columns: 1fr; }
+  .name-card__action { min-height: 44px; justify-content: center; }
   .name-card__action--favorite { justify-content: center; }
 }
 
