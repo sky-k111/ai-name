@@ -45,7 +45,14 @@
     <HistoryDrawer v-if="historyOpen" :open="historyOpen" @close="historyOpen=false" />
     <FavoritesDrawer v-if="favoritesOpen" :open="favoritesOpen" @close="favoritesOpen=false" />
     <ProfileDrawer v-if="profileOpen" :open="profileOpen" @close="profileOpen=false" />
-    <Transition name="toast"><div v-if="toast" class="fixed left-1/2 top-6 z-[100] -translate-x-1/2 rounded-full px-5 py-3 text-sm text-white shadow-xl" :class="toast.type === 'error' ? 'bg-[#b65345]' : 'bg-[#32695d]'">{{ toast.message }}</div></Transition>
+    <ActionToast
+      v-if="toast"
+      :key="toast.id"
+      :title="toast.title"
+      :detail="toast.detail"
+      :type="toast.type"
+      @close="closeToast(toast.id)"
+    />
   </div>
 </template>
 
@@ -54,9 +61,10 @@ import { computed, defineAsyncComponent, nextTick, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import gsap from 'gsap'
 import { useAuthStore } from '../stores/auth'
-import type { GenerateRequest, NameItem, ChatMessage, LoadState } from '../types'
+import type { FavoriteAction, GenerateRequest, NameItem, ChatMessage, LoadState } from '../types'
 import { DEEPSEEK_KEY_SESSION, addFavorite, generateNames, guestGenerateNames, refineNames } from '../api'
 import NameForm from '../components/NameForm.vue'
+import ActionToast from '../components/ActionToast.vue'
 
 const NameResults = defineAsyncComponent(() => import('../components/NameResults.vue'))
 const RefineChat = defineAsyncComponent(() => import('../components/RefineChat.vue'))
@@ -74,7 +82,8 @@ const mode = ref('name'); const modes = [{key:'name',index:'01',label:'智能取
 const activeMode = computed(() => modes.find(m => m.key === mode.value) || modes[0])
 const formData = ref<GenerateRequest>({ surname:'', gender:'male', birthday:'', birth_time:'', style:'', expectations:'' })
 const names=ref<NameItem[]>([]); const resultState=ref<LoadState>('idle'); const errorMessage=ref(''); const conversationId=ref(''); const chatHistory=ref<ChatMessage[]>([])
-const isGenerating=ref(false); const isRefining=ref(false); const authOpen=ref(false); const settingsOpen=ref(false); const historyOpen=ref(false); const favoritesOpen=ref(false); const profileOpen=ref(false); const pendingGenerate=ref<GenerateRequest|null>(null); const hasUserKey=ref(!!sessionStorage.getItem(DEEPSEEK_KEY_SESSION)); const toast=ref<{type:'info'|'error';message:string}|null>(null)
+const isGenerating=ref(false); const isRefining=ref(false); const authOpen=ref(false); const settingsOpen=ref(false); const historyOpen=ref(false); const favoritesOpen=ref(false); const profileOpen=ref(false); const pendingGenerate=ref<GenerateRequest|null>(null); const hasUserKey=ref(!!sessionStorage.getItem(DEEPSEEK_KEY_SESSION)); const toast=ref<{id:number;type:'success'|'info'|'error';title:string;detail:string}|null>(null)
+let toastId = 0
 const showResults=computed(()=>resultState.value!=='idle'); const showRefine=computed(()=>resultState.value==='success')
 
 onMounted(() => { if (!matchMedia('(prefers-reduced-motion: reduce)').matches) gsap.timeline().from('.hero-line',{y:24,opacity:0,duration:.7,stagger:.1,ease:'power3.out'}).from(workbench.value!,{y:28,opacity:0,duration:.65,ease:'power3.out'},'-=.35') })
@@ -82,7 +91,8 @@ function changeMode(value:string){ if(value===mode.value)return; mode.value=valu
 async function openModeDrawer(){modeMenuOpen.value=true;await nextTick();if(!matchMedia('(prefers-reduced-motion: reduce)').matches)gsap.timeline({defaults:{ease:'power3.out'}}).fromTo(modeLayer.value!,{autoAlpha:0},{autoAlpha:1,duration:.22}).fromTo(modePanel.value!,{xPercent:-104},{xPercent:0,duration:.52},0).fromTo(modePanel.value!.querySelectorAll('.mode-entry'),{autoAlpha:0,x:-12},{autoAlpha:1,x:0,duration:.35,stagger:.045},.18)}
 function closeModeDrawer(){if(!modeMenuOpen.value)return;if(matchMedia('(prefers-reduced-motion: reduce)').matches){modeMenuOpen.value=false;return}gsap.timeline({onComplete:()=>modeMenuOpen.value=false}).to(modePanel.value!,{xPercent:-104,duration:.38,ease:'power3.in'}).to(modeLayer.value!,{autoAlpha:0,duration:.18},'<.12')}
 function selectMode(value:string){changeMode(value);closeModeDrawer()}
-function showToast(message:string,type:'info'|'error'='info'){toast.value={message,type};setTimeout(()=>toast.value=null,3000)}
+function showToast(title:string,type:'success'|'info'|'error'='info',detail=''){toast.value={id:++toastId,title,detail,type}}
+function closeToast(id:number){if(toast.value?.id===id)toast.value=null}
 function requestAuth(){ if(authStore.isLoggedIn)return true; authOpen.value=true; return false }
 async function handleGenerate(data:GenerateRequest){ formData.value={...data}; if(!authStore.isLoggedIn){pendingGenerate.value={...data};authOpen.value=true;return} await runGenerate(data,false) }
 async function runGenerate(data:GenerateRequest,guest:boolean){isGenerating.value=true;resultState.value='loading';names.value=[];errorMessage.value='';chatHistory.value=[];try{const res=guest?await guestGenerateNames(data):await generateNames(data);conversationId.value=res.conversation_id;names.value=res.names;resultState.value=res.names.length?'success':'empty';if(res.names.length)chatHistory.value.push({role:'assistant',content:`为你推荐：${res.names.map(n=>n.full_name).join('、')}。你觉得怎么样？`})}catch(e:any){errorMessage.value=e.message||'生成失败，请重试';resultState.value='error';showToast(errorMessage.value,'error')}finally{isGenerating.value=false}}
@@ -90,13 +100,28 @@ function afterLogin(){authOpen.value=false;showToast('已登录，继续刚才�
 function useGuestTrial(){authOpen.value=false;if(pendingGenerate.value){const data=pendingGenerate.value;pendingGenerate.value=null;runGenerate(data,true)}else showToast('填写基础取名信息后即可体验')}
 async function handleRefine(feedback:string){if(!requestAuth())return;isRefining.value=true;chatHistory.value.push({role:'user',content:feedback});try{const res=await refineNames({conversation_id:conversationId.value,original_request:formData.value,history:chatHistory.value.slice(0,-1),feedback});names.value=res.names;resultState.value=res.names.length?'success':'empty';if(res.names.length)chatHistory.value.push({role:'assistant',content:`调整为：${res.names.map(n=>n.full_name).join('、')}。`})}catch(e:any){showToast(e.message||'微调失败','error');chatHistory.value.pop()}finally{isRefining.value=false}}
 function handleRetry(){handleGenerate(formData.value)}
-async function handleFavorite(name:any){if(!requestAuth())return;try{await addFavorite(name.full_name,name);showToast('已收藏')}catch(e:any){showToast(e.message||'收藏失败','error')}}
+async function handleFavorite(action:FavoriteAction){
+  if(!requestAuth()){action.complete('cancelled');return}
+  try{
+    await addFavorite(action.name.full_name,action.name)
+    action.complete('saved')
+    showToast(`「${action.name.full_name}」已收入收藏`,'success','可以在顶部“收藏”中随时查看')
+  }catch(e:any){
+    const message=e.message||'收藏失败'
+    if(message.includes('已收藏过')){
+      action.complete('saved')
+      showToast(`「${action.name.full_name}」已在收藏中`,'info','无需重复收藏，可以直接前往收藏查看')
+    }else{
+      action.complete('error')
+      showToast(message,'error','本次没有保存，请稍后重试')
+    }
+  }
+}
 function handleLogout(){authStore.clearAuth();showToast('已退出，仍可继续浏览')}
 function refreshKeyState(){hasUserKey.value=!!sessionStorage.getItem(DEEPSEEK_KEY_SESSION);showToast(hasUserKey.value?'会话 Key 已启用':'会话 Key 已清除')}
 </script>
 
 <style scoped>
 :deep(.bg-\[\#0071e3\]){background-color:#32695d}:deep(.text-\[\#0071e3\]){color:#32695d}:deep(.bg-white\/80){background-color:rgba(255,255,255,.66)}
-.toast-enter-active,.toast-leave-active{transition:.25s ease}.toast-enter-from,.toast-leave-to{opacity:0;transform:translate(-50%,-8px)}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition-duration:.01ms!important}}
 </style>

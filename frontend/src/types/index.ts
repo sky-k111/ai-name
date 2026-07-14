@@ -30,6 +30,13 @@ export interface NameItem {
   rank?: number
 }
 
+export type FavoriteCompletion = 'saved' | 'error' | 'cancelled'
+
+export interface FavoriteAction {
+  name: NameItem
+  complete: (status: FavoriteCompletion) => void
+}
+
 /** 生成响应 */
 export interface GenerateResponse {
   conversation_id: string

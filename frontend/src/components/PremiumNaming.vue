@@ -1,7 +1,14 @@
 <template>
   <div class="w-full max-w-[820px] mx-auto">
     <NameForm v-model="form" :loading="loading" :disabled="loading" estimate="10-15" @submit="handleSubmit" />
-    <Transition name="toast"><div v-if="favMsg" class="fixed left-1/2 top-6 z-[100] -translate-x-1/2 rounded-full px-5 py-3 text-sm text-white shadow-xl" :class="favType==='error'?'bg-[#b65345]':'bg-[#32695d]'">{{ favMsg }}</div></Transition>
+    <ActionToast
+      v-if="toast"
+      :key="toast.id"
+      :title="toast.title"
+      :detail="toast.detail"
+      :type="toast.type"
+      @close="closeToast(toast.id)"
+    />
     <section v-if="showResults" class="mt-10">
       <PremiumResults :names="names" :state="state" :error-message="error" @retry="handleSubmit(form)" @favorite="handleFavorite" />
     </section>
@@ -10,10 +17,11 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
-import type { GenerateRequest, NameItem, LoadState } from '../types'
+import type { FavoriteAction, GenerateRequest, NameItem, LoadState } from '../types'
 import { premiumNaming, addFavorite } from '../api'
 import NameForm from './NameForm.vue'
 import PremiumResults from './PremiumResults.vue'
+import ActionToast from './ActionToast.vue'
 
 const props = defineProps<{ authGuard?: () => boolean }>()
 
@@ -31,9 +39,24 @@ async function handleSubmit(data: GenerateRequest) {
   try { const r = await premiumNaming(data); names.value=r.names; state.value=r.names.length?'success':'empty' } catch(e:any){ error.value=e.message; state.value='error' } finally{loading.value=false}
 }
 
-const favMsg = ref('')
-const favType = ref('ok')
-async function handleFavorite(name: any) {
-  try { await addFavorite(name.full_name, name); favMsg.value = '已收藏'; favType.value = 'ok'; setTimeout(() => favMsg.value = '', 2000) } catch(e:any){ favMsg.value = e.message || '收藏失败'; favType.value = 'error'; setTimeout(() => favMsg.value = '', 2000) }
+const toast = ref<{id:number;type:'success'|'info'|'error';title:string;detail:string}|null>(null)
+let toastId = 0
+function showToast(title:string,type:'success'|'info'|'error',detail:string){toast.value={id:++toastId,title,type,detail}}
+function closeToast(id:number){if(toast.value?.id===id)toast.value=null}
+async function handleFavorite(action: FavoriteAction) {
+  try {
+    await addFavorite(action.name.full_name, action.name)
+    action.complete('saved')
+    showToast(`「${action.name.full_name}」已收入收藏`, 'success', '可以在顶部“收藏”中随时查看')
+  } catch(e:any) {
+    const message = e.message || '收藏失败'
+    if (message.includes('已收藏过')) {
+      action.complete('saved')
+      showToast(`「${action.name.full_name}」已在收藏中`, 'info', '无需重复收藏，可以直接前往收藏查看')
+    } else {
+      action.complete('error')
+      showToast(message, 'error', '本次没有保存，请稍后重试')
+    }
+  }
 }
 </script>

@@ -56,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-import type { LoadState, NameItem } from '../types'
+import type { FavoriteAction, LoadState, NameItem } from '../types'
 import NameCardSkeleton from './NameCardSkeleton.vue'
 import RecommendedNameCard from './RecommendedNameCard.vue'
 
@@ -67,6 +67,6 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{
   retry: []
-  favorite: [name: NameItem]
+  favorite: [action: FavoriteAction]
 }>()
 </script>

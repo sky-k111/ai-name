@@ -42,12 +42,12 @@
 
 <script setup lang="ts">
 import { nextTick, ref } from 'vue'
-import type { LoadState, NameItem } from '../types'
+import type { FavoriteAction, LoadState, NameItem } from '../types'
 import NameCardSkeleton from './NameCardSkeleton.vue'
 import RecommendedNameCard from './RecommendedNameCard.vue'
 
 const props = defineProps<{ names: NameItem[]; state: LoadState; errorMessage: string }>()
-const emit = defineEmits<{ retry: []; favorite: [name: NameItem] }>()
+const emit = defineEmits<{ retry: []; favorite: [action: FavoriteAction] }>()
 const isExporting = ref(false)
 
 async function exportPDF() {

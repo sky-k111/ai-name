@@ -77,15 +77,25 @@
         <span class="name-card__quiet">一名一笺，自有来处</span>
 
         <button
+          ref="favoriteButton"
           type="button"
           class="name-card__action name-card__action--favorite"
-          :aria-label="`收藏名字 ${name.full_name}`"
-          @click="emit('favorite', name)"
+          :class="{
+            'is-saving': favoriteState === 'saving',
+            'is-saved': favoriteState === 'saved',
+            'is-error': favoriteState === 'error',
+          }"
+          :aria-label="favoriteAriaLabel"
+          :aria-pressed="favoriteState === 'saved'"
+          :disabled="favoriteState === 'saving' || favoriteState === 'saved'"
+          @click="handleFavorite"
         >
-          <svg viewBox="0 0 20 20" aria-hidden="true">
+          <span ref="favoriteRing" class="name-card__favorite-ring" aria-hidden="true" />
+          <svg ref="favoriteIcon" viewBox="0 0 20 20" aria-hidden="true">
             <path d="M5.5 3.25h9v13.5L10 13.9l-4.5 2.85V3.25Z" />
           </svg>
-          <span>收藏名笺</span>
+          <span>{{ favoriteLabel }}</span>
+          <span v-if="favoriteState === 'saved'" ref="favoriteStamp" class="name-card__favorite-stamp" aria-hidden="true">藏</span>
         </button>
       </footer>
     </div>
@@ -93,17 +103,24 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import gsap from "gsap";
-import type { NameItem } from "../types";
+import type { FavoriteAction, FavoriteCompletion, NameItem } from "../types";
 
 const props = defineProps<{ name: NameItem; index: number }>();
-const emit = defineEmits<{ favorite: [name: NameItem] }>();
+const emit = defineEmits<{ favorite: [action: FavoriteAction] }>();
 const card = ref<HTMLElement>();
 const rule = ref<HTMLElement>();
+const favoriteButton = ref<HTMLButtonElement>();
+const favoriteIcon = ref<SVGElement>();
+const favoriteRing = ref<HTMLElement>();
+const favoriteStamp = ref<HTMLElement>();
 const expanded = ref(false);
+const favoriteState = ref<"idle" | "saving" | "saved" | "error">("idle");
 const detailId = `name-detail-${Math.random().toString(36).slice(2)}`;
 let entrance: gsap.core.Timeline | null = null;
+let favoriteResetTimer: ReturnType<typeof setTimeout> | undefined;
+let favoriteTweens: gsap.core.Tween[] = [];
 
 const rankLabel = computed(() => String(props.name.rank || props.index + 1).padStart(2, "0"));
 const popularityLabel = computed(() =>
@@ -119,6 +136,68 @@ const analysisItems = computed(() => [
   { label: "音律解读", english: "PHONETICS", text: props.name.sound_analysis },
   { label: "字形审美", english: "CHARACTER", text: props.name.char_analysis },
 ].filter((item): item is { label: string; english: string; text: string } => Boolean(item.text)));
+const favoriteLabel = computed(() => ({
+  idle: "收藏名笺",
+  saving: "正在收藏",
+  saved: "已收藏",
+  error: "收藏失败",
+})[favoriteState.value]);
+const favoriteAriaLabel = computed(() => favoriteState.value === "saved"
+  ? `名字 ${props.name.full_name} 已收藏`
+  : `${favoriteLabel.value}：${props.name.full_name}`);
+
+function handleFavorite() {
+  if (favoriteState.value === "saving" || favoriteState.value === "saved") return;
+  if (favoriteResetTimer) clearTimeout(favoriteResetTimer);
+  favoriteState.value = "saving";
+  emit("favorite", { name: props.name, complete: completeFavorite });
+}
+
+async function completeFavorite(status: FavoriteCompletion) {
+  favoriteTweens.forEach((tween) => tween.kill());
+  favoriteTweens = [];
+  if (status === "cancelled") {
+    favoriteState.value = "idle";
+    return;
+  }
+  if (status === "error") {
+    favoriteState.value = "error";
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches && favoriteButton.value) {
+      favoriteTweens.push(gsap.fromTo(
+        favoriteButton.value,
+        { x: -5 },
+        { x: 0, duration: 0.45, ease: "elastic.out(1, 0.28)", clearProps: "transform" },
+      ));
+    }
+    favoriteResetTimer = setTimeout(() => { favoriteState.value = "idle"; }, 2600);
+    return;
+  }
+
+  favoriteState.value = "saved";
+  await nextTick();
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (favoriteIcon.value) {
+    favoriteTweens.push(gsap.fromTo(
+      favoriteIcon.value,
+      { scale: 0.62, y: 5, rotation: -10 },
+      { scale: 1, y: 0, rotation: 0, duration: 0.56, ease: "back.out(2.4)", clearProps: "transform" },
+    ));
+  }
+  if (favoriteStamp.value) {
+    favoriteTweens.push(gsap.fromTo(
+      favoriteStamp.value,
+      { autoAlpha: 0, scale: 1.7, rotation: -12 },
+      { autoAlpha: 1, scale: 1, rotation: -3, duration: 0.48, ease: "back.out(2)" },
+    ));
+  }
+  if (favoriteRing.value) {
+    favoriteTweens.push(gsap.fromTo(
+      favoriteRing.value,
+      { autoAlpha: 0.55, scale: 0.35 },
+      { autoAlpha: 0, scale: 1.5, duration: 0.62, ease: "power2.out" },
+    ));
+  }
+}
 
 onMounted(() => {
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -127,7 +206,11 @@ onMounted(() => {
     .fromTo(rule.value!, { scaleX: 0 }, { scaleX: 1, duration: 0.48, ease: "power2.out", clearProps: "transform" }, 0.1);
 });
 
-onBeforeUnmount(() => entrance?.kill());
+onBeforeUnmount(() => {
+  entrance?.kill();
+  favoriteTweens.forEach((tween) => tween.kill());
+  if (favoriteResetTimer) clearTimeout(favoriteResetTimer);
+});
 </script>
 
 <style scoped>
@@ -217,9 +300,18 @@ onBeforeUnmount(() => entrance?.kill());
 .name-card__action { display: inline-flex; cursor: pointer; align-items: center; gap: 8px; border-radius: 999px; color: #32695d; font-size: 12px; transition: color 180ms ease, background-color 180ms ease; }
 .name-card__action:focus-visible { outline: 2px solid #32695d; outline-offset: 4px; }
 .name-card__action svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5; }
-.name-card__action--favorite { padding: 9px 13px; border: 1px solid rgba(50, 105, 93, 0.28); }
+.name-card__action--favorite { position: relative; overflow: visible; min-width: 112px; justify-content: center; padding: 9px 13px; border: 1px solid rgba(50, 105, 93, 0.28); }
 .name-card__action--favorite:hover { background: rgba(50, 105, 93, 0.08); }
+.name-card__action--favorite:disabled { cursor: default; opacity: 1; }
+.name-card__action--favorite.is-saving { cursor: wait; color: #7d817c; }
+.name-card__action--favorite.is-saving svg { animation: bookmark-breathe 900ms ease-in-out infinite alternate; }
+.name-card__action--favorite.is-saved { border-color: rgba(50, 105, 93, 0.48); background: rgba(50, 105, 93, 0.1); color: #254c40; }
+.name-card__action--favorite.is-saved svg { fill: currentColor; }
+.name-card__action--favorite.is-error { border-color: rgba(166, 66, 53, 0.42); color: #9b4035; }
+.name-card__favorite-ring { position: absolute; width: 30px; height: 30px; border: 1px solid rgba(166, 66, 53, 0.58); border-radius: 999px; opacity: 0; pointer-events: none; }
+.name-card__favorite-stamp { display: grid; width: 22px; height: 22px; place-items: center; border: 1px solid rgba(166, 66, 53, 0.58); color: #9b4035; font-family: "STKaiti", "KaiTi", serif; font-size: 10px; transform: rotate(-3deg); }
 .name-card__quiet { color: #918b80; font-family: "Songti SC", "STSong", serif; font-size: 12px; }
+@keyframes bookmark-breathe { to { opacity: 0.48; transform: translateY(-1px); } }
 
 @media (max-width: 640px) {
   .name-card { border-radius: 20px; }
@@ -239,5 +331,6 @@ onBeforeUnmount(() => entrance?.kill());
 
 @media (prefers-reduced-motion: reduce) {
   .name-card, .name-card__action, .name-card__action svg, .name-card__toggle-label svg, .name-card__expand-region { transition-duration: 0.01ms !important; }
+  .name-card__action--favorite.is-saving svg { animation: none; }
 }
 </style>
