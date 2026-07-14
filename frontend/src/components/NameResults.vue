@@ -55,84 +55,29 @@
     </div>
 
     <!-- 成功：名字卡片 -->
-    <TransitionGroup
-      v-if="state === 'success'"
-      name="card"
-      tag="div"
-      class="space-y-3"
-      appear
-    >
-      <div
+    <div v-if="state === 'success'" class="space-y-5">
+      <RecommendedNameCard
         v-for="(name, idx) in names"
         :key="name.full_name"
-        ref="cards"
-        class="bg-white/80 backdrop-blur-xl rounded-2xl p-6
-               shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-[#d2d2d7]/30
-               transition-all duration-300 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)]
-               hover:-translate-y-[1px]"
-        :style="{ transitionDelay: `${idx * 0.1}s` }"
-      >
-        <!-- 名字 -->
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="text-[28px] font-semibold text-[#1d1d1f] tracking-tight">
-            {{ name.full_name }}
-          </h3>
-          <button class="text-[14px] text-[#aeaeb2] hover:text-[#0071e3] transition-colors" @click.stop="emit('favorite', name)">收藏</button>
-        </div>
-
-        <!-- 寓意 -->
-        <p class="text-[15px] text-[#3a3a3c] leading-relaxed mb-3">
-          {{ name.meaning }}
-        </p>
-
-        <!-- 元信息 -->
-        <div class="flex items-center gap-4 text-[13px] text-[#aeaeb2]">
-          <span v-if="name.wuxing" class="flex items-center gap-1">
-            <span class="w-1 h-1 rounded-full bg-[#aeaeb2]" />
-            五行 {{ name.wuxing }}
-          </span>
-          <span v-if="name.source" class="flex items-center gap-1">
-            <span class="w-1 h-1 rounded-full bg-[#aeaeb2]" />
-            出处 {{ name.source }}
-          </span>
-        </div>
-      </div>
-    </TransitionGroup>
+        :name="name"
+        :index="idx"
+        @favorite="emit('favorite', $event)"
+      />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue'
-import gsap from 'gsap'
 import type { LoadState, NameItem } from '../types'
+import RecommendedNameCard from './RecommendedNameCard.vue'
 
 const props = defineProps<{
   names: NameItem[]
   state: LoadState
   errorMessage: string
 }>()
-const cards = ref<HTMLElement[]>([])
-
-watch(() => [props.state, props.names], async () => {
-  if (props.state !== 'success') return
-  await nextTick()
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
-  gsap.fromTo(cards.value, { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: .48, stagger: .08, ease: 'power3.out', clearProps: 'transform,opacity' })
-}, { deep: true })
-
 const emit = defineEmits<{
   retry: []
   favorite: [name: NameItem]
 }>()
 </script>
-
-<style scoped>
-/* 卡片入场动画 */
-.card-enter-active {
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.card-enter-from {
-  opacity: 0;
-  transform: translateY(8px);
-}
-</style>

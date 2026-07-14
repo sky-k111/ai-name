@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full max-w-[680px] mx-auto">
+  <div class="w-full max-w-[820px] mx-auto">
     <div v-if="state==='idle'" class="text-center py-20"><p class="text-[17px] text-[#aeaeb2]">输入信息后点击「生成名字」</p></div>
 
     <div v-if="state==='loading'" class="space-y-4">
@@ -13,57 +13,22 @@
       <button class="text-[13px] text-[#0071e3] hover:underline transition-colors" @click="exportPDF">导出报告 PDF</button>
     </div>
 
-    <TransitionGroup v-if="state==='success'" name="card" tag="div" class="space-y-4" appear>
-      <div v-for="(name, idx) in names" :key="name.full_name"
-        class="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-[#d2d2d7]/30"
-        :style="{ transitionDelay: `${idx * 0.1}s` }">
-        <!-- 头部 -->
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-[28px] font-semibold text-[#1d1d1f]">{{ name.full_name }}</h3>
-          <button class="text-[13px] text-[#aeaeb2] hover:text-[#0071e3] transition-colors" @click="emit('favorite', name)">收藏</button>
-        </div>
-
-        <!-- 寓意 -->
-        <p class="text-[15px] text-[#3a3a3c] leading-relaxed mb-4">{{ name.meaning }}</p>
-
-        <!-- 属性标签 -->
-        <div class="flex flex-wrap gap-2 mb-4">
-          <span class="px-3 py-1 bg-[#f5f5f7] rounded-full text-[13px] text-[#86868b]">五行 {{ name.wuxing }}</span>
-          <span class="px-3 py-1 bg-[#f5f5f7] rounded-full text-[13px] text-[#86868b]">出处 {{ name.source }}</span>
-          <span v-if="name.sound_analysis" class="px-3 py-1 bg-[#f5f5f7] rounded-full text-[13px] text-[#86868b]">音律分析</span>
-          <span v-if="name.char_analysis" class="px-3 py-1 bg-[#f5f5f7] rounded-full text-[13px] text-[#86868b]">字形分析</span>
-          <span class="px-3 py-1 rounded-full text-[13px] font-medium"
-            :class="(name.popularity||'').includes('低') ? 'bg-green-100 text-green-700' : (name.popularity||'').includes('高') ? 'bg-red-100 text-red-600' : 'bg-yellow-100 text-yellow-700'">
-            重名概率{{ name.popularity ? name.popularity.replace('重名概率','') : '未知' }}
-          </span>
-        </div>
-
-        <!-- 八字 -->
-        <div v-if="name.bazi" class="bg-[#f5f5f7] rounded-xl p-4 mb-3">
-          <p class="text-[13px] font-medium text-[#86868b] mb-1">八字分析</p>
-          <p class="text-[14px] text-[#3a3a3c] leading-relaxed">{{ name.bazi }}</p>
-        </div>
-
-        <!-- 音律 -->
-        <div v-if="name.sound_analysis" class="bg-[#f5f5f7] rounded-xl p-4 mb-3">
-          <p class="text-[13px] font-medium text-[#86868b] mb-1">音律分析</p>
-          <p class="text-[14px] text-[#3a3a3c] leading-relaxed">{{ name.sound_analysis }}</p>
-        </div>
-
-        <!-- 字形 -->
-        <div v-if="name.char_analysis" class="bg-[#f5f5f7] rounded-xl p-4 mb-3">
-          <p class="text-[13px] font-medium text-[#86868b] mb-1">字形分析</p>
-          <p class="text-[14px] text-[#3a3a3c] leading-relaxed">{{ name.char_analysis }}</p>
-        </div>
-
-      </div>
-    </TransitionGroup>
+    <div v-if="state==='success'" class="space-y-5">
+      <RecommendedNameCard
+        v-for="(name, idx) in names"
+        :key="name.full_name"
+        :name="name"
+        :index="idx"
+        @favorite="emit('favorite', $event)"
+      />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { nextTick } from 'vue'
 import type { LoadState, NameItem } from '../types'
+import RecommendedNameCard from './RecommendedNameCard.vue'
 
 const props = defineProps<{ names: NameItem[]; state: LoadState; errorMessage: string }>()
 const emit = defineEmits<{ retry: []; favorite: [name: NameItem] }>()
@@ -104,8 +69,3 @@ ${props.names.map((n, i) => `
   pdf.save('取名报告.pdf')
 }
 </script>
-
-<style scoped>
-.card-enter-active { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-.card-enter-from { opacity: 0; transform: translateY(8px); }
-</style>
